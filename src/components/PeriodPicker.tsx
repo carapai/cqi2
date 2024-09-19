@@ -106,7 +106,6 @@ const PeriodPicker = ({
         <Stack position="relative" flex={1}>
             <Button
                 onClick={onToggle}
-                w="300px"
                 size="sm"
                 variant="outline"
                 _hover={{ backgroundColor: "none" }}

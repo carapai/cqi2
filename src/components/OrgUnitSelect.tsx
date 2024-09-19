@@ -1,34 +1,27 @@
-import { db } from "@/db";
+import { OrgUnit } from "@/interfaces";
 import { orgUnitQueryOptions } from "@/queryOptions";
 import { useQueryClient } from "@tanstack/react-query";
 import type { TreeSelectProps } from "antd";
 import { TreeSelect } from "antd";
+import { IndexableType, Table } from "dexie";
 import { useLiveQuery } from "dexie-react-hooks";
-import { FC, useState } from "react";
+import { FC } from "react";
 
-const OrgUnitSelect: FC = () => {
+const OrgUnitSelect: FC<{
+    table: Table<OrgUnit, IndexableType>;
+    value: string;
+    onChange: (newValue: string) => void;
+}> = ({ table, value, onChange }) => {
     const queryClient = useQueryClient();
-    const [value, setValue] = useState<string>();
-    const organisationUnits = useLiveQuery(() =>
-        db.organisationUnits.toArray(),
-    );
+    const organisationUnits = useLiveQuery(() => table.toArray());
 
-    const onLoadData: TreeSelectProps["loadData"] = async ({
-        value,
-        ...rest
-    }) => {
-        console.log(rest);
+    const onLoadData: TreeSelectProps["loadData"] = async ({ value }) => {
         if (value) {
             await queryClient.ensureQueryData(
-                orgUnitQueryOptions(value.toString()),
+                orgUnitQueryOptions(value.toString(), table),
             );
         }
     };
-
-    const onChange = (newValue: string) => {
-        setValue(newValue);
-    };
-
     return (
         <TreeSelect
             treeDataSimpleMode

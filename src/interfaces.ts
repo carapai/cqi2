@@ -1,4 +1,10 @@
 import type { TreeDataNode } from "antd";
+import { OptionBase } from "chakra-react-select";
+
+export interface Option extends OptionBase {
+    label: string;
+    value: string;
+}
 
 export interface OrgUnit extends TreeDataNode {
     pId?: string;
@@ -291,7 +297,7 @@ export interface OptionSet {
     options: Option[];
 }
 
-export interface Option {
+export interface OptionOption {
     code: string;
     name: string;
     id: string;
@@ -349,4 +355,51 @@ export interface Beneficiary {
 
 export interface SearchCriteria {
     [key: string]: string;
+}
+
+export type RelativePeriodType =
+    | "DAILY"
+    | "WEEKLY"
+    | "BIWEEKLY"
+    | "WEEKS_THIS_YEAR"
+    | "MONTHLY"
+    | "BIMONTHLY"
+    | "QUARTERLY"
+    | "SIXMONTHLY"
+    | "FINANCIAL"
+    | "YEARLY";
+
+export type FixedPeriodType =
+    | "DAILY"
+    | "WEEKLY"
+    | "WEEKLYWED"
+    | "WEEKLYTHU"
+    | "WEEKLYSAT"
+    | "WEEKLYSUN"
+    | "BIWEEKLY"
+    | "MONTHLY"
+    | "BIMONTHLY"
+    | "QUARTERLY"
+    | "QUARTERLYNOV"
+    | "SIXMONTHLY"
+    | "SIXMONTHLYAPR"
+    | "SIXMONTHLYNOV"
+    | "YEARLY"
+    | "FYNOV"
+    | "FYOCT"
+    | "FYJUL"
+    | "FYAPR";
+
+export type FixedPeriod = {
+    id: string;
+    iso?: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+};
+
+export interface Period extends Option {
+    startDate?: string;
+    endDate?: string;
+    type: "fixed" | "relative" | "range";
 }

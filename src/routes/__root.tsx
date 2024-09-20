@@ -35,7 +35,10 @@ function RootComponent() {
                     <Link to="/dashboards/indicators">
                         <Button>All Indicators</Button>
                     </Link>
-                    <Link to="/dashboards/projects">
+                    <Link
+                        to="/dashboards/projects"
+                        search={{ page: 1, pageSize: 10 }}
+                    >
                         <Button>Projects</Button>
                     </Link>
                     <Link to="/dashboards/admin">

@@ -225,3 +225,25 @@ export const relativePeriods2: { [key: string]: string[] } = {
         true,
     ),
 };
+
+export const convertParent = (
+    found: string[],
+    parent?: {
+        id: string;
+        name: string;
+        parent?: {
+            id: string;
+            name: string;
+            parent?: { id: string; name: string };
+        };
+    },
+): string[] => {
+    if (parent) {
+        found = [...found, parent.name];
+        if (parent.parent) {
+            return convertParent(found, parent.parent);
+        }
+    }
+
+    return found;
+};

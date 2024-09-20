@@ -1,6 +1,7 @@
 import OrgUnitSelect from "@/components/OrgUnitSelect";
 import PeriodPicker from "@/components/PeriodPicker";
 import { db } from "@/db";
+import { DashboardQueryValidator } from "@/interfaces";
 import { dashboardsQueryOptions } from "@/queryOptions";
 import { Box, Spacer, Stack, Text } from "@chakra-ui/react";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -11,17 +12,10 @@ import {
     useSearch,
 } from "@tanstack/react-router";
 import { Select } from "antd";
-import { z } from "zod";
 
 export const Route = createFileRoute("/dashboards")({
     component: DashboardComponent,
-    validateSearch: z.object({
-        pa: z.string().optional(),
-        ind: z.string().optional(),
-        level: z.number().optional(),
-        ou: z.string().optional(),
-        periods: z.any().array().optional(),
-    }),
+    validateSearch: DashboardQueryValidator,
     loader: ({ context: { queryClient } }) =>
         queryClient.ensureQueryData(dashboardsQueryOptions),
 });

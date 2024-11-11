@@ -10,258 +10,258 @@
 
 // Import Routes
 
-import { Route as rootRoute } from "./routes/__root";
-import { Route as DataEntryImport } from "./routes/data-entry";
-import { Route as DashboardsImport } from "./routes/dashboards";
-import { Route as IndexImport } from "./routes/index";
-import { Route as DataEntryProgramImport } from "./routes/data-entry.$program";
-import { Route as DashboardsIdImport } from "./routes/dashboards.$id";
-import { Route as DataEntryProgramTrackedEntitiesImport } from "./routes/data-entry.$program.tracked-entities";
-import { Route as DataEntryProgramTrackedEntitiesEntityIndexImport } from "./routes/data-entry.$program.tracked-entities_.$entity.index";
-import { Route as DataEntryProgramTrackedEntitiesEntityFormImport } from "./routes/data-entry.$program.tracked-entities_.$entity.form";
+import { Route as rootRoute } from './routes/__root'
+import { Route as DataEntryImport } from './routes/data-entry'
+import { Route as DashboardsImport } from './routes/dashboards'
+import { Route as IndexImport } from './routes/index'
+import { Route as DataEntryProgramImport } from './routes/data-entry.$program'
+import { Route as DashboardsIdImport } from './routes/dashboards.$id'
+import { Route as DataEntryProgramTrackedEntitiesImport } from './routes/data-entry.$program.tracked-entities'
+import { Route as DataEntryProgramTrackedEntitiesEntityIndexImport } from './routes/data-entry.$program.tracked-entities_.$entity.index'
+import { Route as DataEntryProgramTrackedEntitiesEntityFormImport } from './routes/data-entry.$program.tracked-entities_.$entity.form'
 
 // Create/Update Routes
 
 const DataEntryRoute = DataEntryImport.update({
-    id: "/data-entry",
-    path: "/data-entry",
-    getParentRoute: () => rootRoute,
-} as any);
+  id: '/data-entry',
+  path: '/data-entry',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const DashboardsRoute = DashboardsImport.update({
-    id: "/dashboards",
-    path: "/dashboards",
-    getParentRoute: () => rootRoute,
-} as any);
+  id: '/dashboards',
+  path: '/dashboards',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const IndexRoute = IndexImport.update({
-    id: "/",
-    path: "/",
-    getParentRoute: () => rootRoute,
-} as any);
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const DataEntryProgramRoute = DataEntryProgramImport.update({
-    id: "/$program",
-    path: "/$program",
-    getParentRoute: () => DataEntryRoute,
-} as any);
+  id: '/$program',
+  path: '/$program',
+  getParentRoute: () => DataEntryRoute,
+} as any)
 
 const DashboardsIdRoute = DashboardsIdImport.update({
-    id: "/$id",
-    path: "/$id",
-    getParentRoute: () => DashboardsRoute,
-} as any);
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => DashboardsRoute,
+} as any)
 
 const DataEntryProgramTrackedEntitiesRoute =
-    DataEntryProgramTrackedEntitiesImport.update({
-        id: "/tracked-entities",
-        path: "/tracked-entities",
-        getParentRoute: () => DataEntryProgramRoute,
-    } as any);
+  DataEntryProgramTrackedEntitiesImport.update({
+    id: '/tracked-entities',
+    path: '/tracked-entities',
+    getParentRoute: () => DataEntryProgramRoute,
+  } as any)
 
 const DataEntryProgramTrackedEntitiesEntityIndexRoute =
-    DataEntryProgramTrackedEntitiesEntityIndexImport.update({
-        id: "/tracked-entities_/$entity/",
-        path: "/tracked-entities/$entity/",
-        getParentRoute: () => DataEntryProgramRoute,
-    } as any);
+  DataEntryProgramTrackedEntitiesEntityIndexImport.update({
+    id: '/tracked-entities_/$entity/',
+    path: '/tracked-entities/$entity/',
+    getParentRoute: () => DataEntryProgramRoute,
+  } as any)
 
 const DataEntryProgramTrackedEntitiesEntityFormRoute =
-    DataEntryProgramTrackedEntitiesEntityFormImport.update({
-        id: "/tracked-entities_/$entity/form",
-        path: "/tracked-entities/$entity/form",
-        getParentRoute: () => DataEntryProgramRoute,
-    } as any);
+  DataEntryProgramTrackedEntitiesEntityFormImport.update({
+    id: '/tracked-entities_/$entity/form',
+    path: '/tracked-entities/$entity/form',
+    getParentRoute: () => DataEntryProgramRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
-declare module "@tanstack/react-router" {
-    interface FileRoutesByPath {
-        "/": {
-            id: "/";
-            path: "/";
-            fullPath: "/";
-            preLoaderRoute: typeof IndexImport;
-            parentRoute: typeof rootRoute;
-        };
-        "/dashboards": {
-            id: "/dashboards";
-            path: "/dashboards";
-            fullPath: "/dashboards";
-            preLoaderRoute: typeof DashboardsImport;
-            parentRoute: typeof rootRoute;
-        };
-        "/data-entry": {
-            id: "/data-entry";
-            path: "/data-entry";
-            fullPath: "/data-entry";
-            preLoaderRoute: typeof DataEntryImport;
-            parentRoute: typeof rootRoute;
-        };
-        "/dashboards/$id": {
-            id: "/dashboards/$id";
-            path: "/$id";
-            fullPath: "/dashboards/$id";
-            preLoaderRoute: typeof DashboardsIdImport;
-            parentRoute: typeof DashboardsImport;
-        };
-        "/data-entry/$program": {
-            id: "/data-entry/$program";
-            path: "/$program";
-            fullPath: "/data-entry/$program";
-            preLoaderRoute: typeof DataEntryProgramImport;
-            parentRoute: typeof DataEntryImport;
-        };
-        "/data-entry/$program/tracked-entities": {
-            id: "/data-entry/$program/tracked-entities";
-            path: "/tracked-entities";
-            fullPath: "/data-entry/$program/tracked-entities";
-            preLoaderRoute: typeof DataEntryProgramTrackedEntitiesImport;
-            parentRoute: typeof DataEntryProgramImport;
-        };
-        "/data-entry/$program/tracked-entities_/$entity/form": {
-            id: "/data-entry/$program/tracked-entities_/$entity/form";
-            path: "/tracked-entities/$entity/form";
-            fullPath: "/data-entry/$program/tracked-entities/$entity/form";
-            preLoaderRoute: typeof DataEntryProgramTrackedEntitiesEntityFormImport;
-            parentRoute: typeof DataEntryProgramImport;
-        };
-        "/data-entry/$program/tracked-entities_/$entity/": {
-            id: "/data-entry/$program/tracked-entities_/$entity/";
-            path: "/tracked-entities/$entity";
-            fullPath: "/data-entry/$program/tracked-entities/$entity";
-            preLoaderRoute: typeof DataEntryProgramTrackedEntitiesEntityIndexImport;
-            parentRoute: typeof DataEntryProgramImport;
-        };
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof rootRoute
     }
+    '/dashboards': {
+      id: '/dashboards'
+      path: '/dashboards'
+      fullPath: '/dashboards'
+      preLoaderRoute: typeof DashboardsImport
+      parentRoute: typeof rootRoute
+    }
+    '/data-entry': {
+      id: '/data-entry'
+      path: '/data-entry'
+      fullPath: '/data-entry'
+      preLoaderRoute: typeof DataEntryImport
+      parentRoute: typeof rootRoute
+    }
+    '/dashboards/$id': {
+      id: '/dashboards/$id'
+      path: '/$id'
+      fullPath: '/dashboards/$id'
+      preLoaderRoute: typeof DashboardsIdImport
+      parentRoute: typeof DashboardsImport
+    }
+    '/data-entry/$program': {
+      id: '/data-entry/$program'
+      path: '/$program'
+      fullPath: '/data-entry/$program'
+      preLoaderRoute: typeof DataEntryProgramImport
+      parentRoute: typeof DataEntryImport
+    }
+    '/data-entry/$program/tracked-entities': {
+      id: '/data-entry/$program/tracked-entities'
+      path: '/tracked-entities'
+      fullPath: '/data-entry/$program/tracked-entities'
+      preLoaderRoute: typeof DataEntryProgramTrackedEntitiesImport
+      parentRoute: typeof DataEntryProgramImport
+    }
+    '/data-entry/$program/tracked-entities_/$entity/form': {
+      id: '/data-entry/$program/tracked-entities_/$entity/form'
+      path: '/tracked-entities/$entity/form'
+      fullPath: '/data-entry/$program/tracked-entities/$entity/form'
+      preLoaderRoute: typeof DataEntryProgramTrackedEntitiesEntityFormImport
+      parentRoute: typeof DataEntryProgramImport
+    }
+    '/data-entry/$program/tracked-entities_/$entity/': {
+      id: '/data-entry/$program/tracked-entities_/$entity/'
+      path: '/tracked-entities/$entity'
+      fullPath: '/data-entry/$program/tracked-entities/$entity'
+      preLoaderRoute: typeof DataEntryProgramTrackedEntitiesEntityIndexImport
+      parentRoute: typeof DataEntryProgramImport
+    }
+  }
 }
 
 // Create and export the route tree
 
 interface DashboardsRouteChildren {
-    DashboardsIdRoute: typeof DashboardsIdRoute;
+  DashboardsIdRoute: typeof DashboardsIdRoute
 }
 
 const DashboardsRouteChildren: DashboardsRouteChildren = {
-    DashboardsIdRoute: DashboardsIdRoute,
-};
+  DashboardsIdRoute: DashboardsIdRoute,
+}
 
 const DashboardsRouteWithChildren = DashboardsRoute._addFileChildren(
-    DashboardsRouteChildren,
-);
+  DashboardsRouteChildren,
+)
 
 interface DataEntryProgramRouteChildren {
-    DataEntryProgramTrackedEntitiesRoute: typeof DataEntryProgramTrackedEntitiesRoute;
-    DataEntryProgramTrackedEntitiesEntityFormRoute: typeof DataEntryProgramTrackedEntitiesEntityFormRoute;
-    DataEntryProgramTrackedEntitiesEntityIndexRoute: typeof DataEntryProgramTrackedEntitiesEntityIndexRoute;
+  DataEntryProgramTrackedEntitiesRoute: typeof DataEntryProgramTrackedEntitiesRoute
+  DataEntryProgramTrackedEntitiesEntityFormRoute: typeof DataEntryProgramTrackedEntitiesEntityFormRoute
+  DataEntryProgramTrackedEntitiesEntityIndexRoute: typeof DataEntryProgramTrackedEntitiesEntityIndexRoute
 }
 
 const DataEntryProgramRouteChildren: DataEntryProgramRouteChildren = {
-    DataEntryProgramTrackedEntitiesRoute: DataEntryProgramTrackedEntitiesRoute,
-    DataEntryProgramTrackedEntitiesEntityFormRoute:
-        DataEntryProgramTrackedEntitiesEntityFormRoute,
-    DataEntryProgramTrackedEntitiesEntityIndexRoute:
-        DataEntryProgramTrackedEntitiesEntityIndexRoute,
-};
+  DataEntryProgramTrackedEntitiesRoute: DataEntryProgramTrackedEntitiesRoute,
+  DataEntryProgramTrackedEntitiesEntityFormRoute:
+    DataEntryProgramTrackedEntitiesEntityFormRoute,
+  DataEntryProgramTrackedEntitiesEntityIndexRoute:
+    DataEntryProgramTrackedEntitiesEntityIndexRoute,
+}
 
 const DataEntryProgramRouteWithChildren =
-    DataEntryProgramRoute._addFileChildren(DataEntryProgramRouteChildren);
+  DataEntryProgramRoute._addFileChildren(DataEntryProgramRouteChildren)
 
 interface DataEntryRouteChildren {
-    DataEntryProgramRoute: typeof DataEntryProgramRouteWithChildren;
+  DataEntryProgramRoute: typeof DataEntryProgramRouteWithChildren
 }
 
 const DataEntryRouteChildren: DataEntryRouteChildren = {
-    DataEntryProgramRoute: DataEntryProgramRouteWithChildren,
-};
+  DataEntryProgramRoute: DataEntryProgramRouteWithChildren,
+}
 
 const DataEntryRouteWithChildren = DataEntryRoute._addFileChildren(
-    DataEntryRouteChildren,
-);
+  DataEntryRouteChildren,
+)
 
 export interface FileRoutesByFullPath {
-    "/": typeof IndexRoute;
-    "/dashboards": typeof DashboardsRouteWithChildren;
-    "/data-entry": typeof DataEntryRouteWithChildren;
-    "/dashboards/$id": typeof DashboardsIdRoute;
-    "/data-entry/$program": typeof DataEntryProgramRouteWithChildren;
-    "/data-entry/$program/tracked-entities": typeof DataEntryProgramTrackedEntitiesRoute;
-    "/data-entry/$program/tracked-entities/$entity/form": typeof DataEntryProgramTrackedEntitiesEntityFormRoute;
-    "/data-entry/$program/tracked-entities/$entity": typeof DataEntryProgramTrackedEntitiesEntityIndexRoute;
+  '/': typeof IndexRoute
+  '/dashboards': typeof DashboardsRouteWithChildren
+  '/data-entry': typeof DataEntryRouteWithChildren
+  '/dashboards/$id': typeof DashboardsIdRoute
+  '/data-entry/$program': typeof DataEntryProgramRouteWithChildren
+  '/data-entry/$program/tracked-entities': typeof DataEntryProgramTrackedEntitiesRoute
+  '/data-entry/$program/tracked-entities/$entity/form': typeof DataEntryProgramTrackedEntitiesEntityFormRoute
+  '/data-entry/$program/tracked-entities/$entity': typeof DataEntryProgramTrackedEntitiesEntityIndexRoute
 }
 
 export interface FileRoutesByTo {
-    "/": typeof IndexRoute;
-    "/dashboards": typeof DashboardsRouteWithChildren;
-    "/data-entry": typeof DataEntryRouteWithChildren;
-    "/dashboards/$id": typeof DashboardsIdRoute;
-    "/data-entry/$program": typeof DataEntryProgramRouteWithChildren;
-    "/data-entry/$program/tracked-entities": typeof DataEntryProgramTrackedEntitiesRoute;
-    "/data-entry/$program/tracked-entities/$entity/form": typeof DataEntryProgramTrackedEntitiesEntityFormRoute;
-    "/data-entry/$program/tracked-entities/$entity": typeof DataEntryProgramTrackedEntitiesEntityIndexRoute;
+  '/': typeof IndexRoute
+  '/dashboards': typeof DashboardsRouteWithChildren
+  '/data-entry': typeof DataEntryRouteWithChildren
+  '/dashboards/$id': typeof DashboardsIdRoute
+  '/data-entry/$program': typeof DataEntryProgramRouteWithChildren
+  '/data-entry/$program/tracked-entities': typeof DataEntryProgramTrackedEntitiesRoute
+  '/data-entry/$program/tracked-entities/$entity/form': typeof DataEntryProgramTrackedEntitiesEntityFormRoute
+  '/data-entry/$program/tracked-entities/$entity': typeof DataEntryProgramTrackedEntitiesEntityIndexRoute
 }
 
 export interface FileRoutesById {
-    __root__: typeof rootRoute;
-    "/": typeof IndexRoute;
-    "/dashboards": typeof DashboardsRouteWithChildren;
-    "/data-entry": typeof DataEntryRouteWithChildren;
-    "/dashboards/$id": typeof DashboardsIdRoute;
-    "/data-entry/$program": typeof DataEntryProgramRouteWithChildren;
-    "/data-entry/$program/tracked-entities": typeof DataEntryProgramTrackedEntitiesRoute;
-    "/data-entry/$program/tracked-entities_/$entity/form": typeof DataEntryProgramTrackedEntitiesEntityFormRoute;
-    "/data-entry/$program/tracked-entities_/$entity/": typeof DataEntryProgramTrackedEntitiesEntityIndexRoute;
+  __root__: typeof rootRoute
+  '/': typeof IndexRoute
+  '/dashboards': typeof DashboardsRouteWithChildren
+  '/data-entry': typeof DataEntryRouteWithChildren
+  '/dashboards/$id': typeof DashboardsIdRoute
+  '/data-entry/$program': typeof DataEntryProgramRouteWithChildren
+  '/data-entry/$program/tracked-entities': typeof DataEntryProgramTrackedEntitiesRoute
+  '/data-entry/$program/tracked-entities_/$entity/form': typeof DataEntryProgramTrackedEntitiesEntityFormRoute
+  '/data-entry/$program/tracked-entities_/$entity/': typeof DataEntryProgramTrackedEntitiesEntityIndexRoute
 }
 
 export interface FileRouteTypes {
-    fileRoutesByFullPath: FileRoutesByFullPath;
-    fullPaths:
-        | "/"
-        | "/dashboards"
-        | "/data-entry"
-        | "/dashboards/$id"
-        | "/data-entry/$program"
-        | "/data-entry/$program/tracked-entities"
-        | "/data-entry/$program/tracked-entities/$entity/form"
-        | "/data-entry/$program/tracked-entities/$entity";
-    fileRoutesByTo: FileRoutesByTo;
-    to:
-        | "/"
-        | "/dashboards"
-        | "/data-entry"
-        | "/dashboards/$id"
-        | "/data-entry/$program"
-        | "/data-entry/$program/tracked-entities"
-        | "/data-entry/$program/tracked-entities/$entity/form"
-        | "/data-entry/$program/tracked-entities/$entity";
-    id:
-        | "__root__"
-        | "/"
-        | "/dashboards"
-        | "/data-entry"
-        | "/dashboards/$id"
-        | "/data-entry/$program"
-        | "/data-entry/$program/tracked-entities"
-        | "/data-entry/$program/tracked-entities_/$entity/form"
-        | "/data-entry/$program/tracked-entities_/$entity/";
-    fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/dashboards'
+    | '/data-entry'
+    | '/dashboards/$id'
+    | '/data-entry/$program'
+    | '/data-entry/$program/tracked-entities'
+    | '/data-entry/$program/tracked-entities/$entity/form'
+    | '/data-entry/$program/tracked-entities/$entity'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/dashboards'
+    | '/data-entry'
+    | '/dashboards/$id'
+    | '/data-entry/$program'
+    | '/data-entry/$program/tracked-entities'
+    | '/data-entry/$program/tracked-entities/$entity/form'
+    | '/data-entry/$program/tracked-entities/$entity'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboards'
+    | '/data-entry'
+    | '/dashboards/$id'
+    | '/data-entry/$program'
+    | '/data-entry/$program/tracked-entities'
+    | '/data-entry/$program/tracked-entities_/$entity/form'
+    | '/data-entry/$program/tracked-entities_/$entity/'
+  fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-    IndexRoute: typeof IndexRoute;
-    DashboardsRoute: typeof DashboardsRouteWithChildren;
-    DataEntryRoute: typeof DataEntryRouteWithChildren;
+  IndexRoute: typeof IndexRoute
+  DashboardsRoute: typeof DashboardsRouteWithChildren
+  DataEntryRoute: typeof DataEntryRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
-    IndexRoute: IndexRoute,
-    DashboardsRoute: DashboardsRouteWithChildren,
-    DataEntryRoute: DataEntryRouteWithChildren,
-};
+  IndexRoute: IndexRoute,
+  DashboardsRoute: DashboardsRouteWithChildren,
+  DataEntryRoute: DataEntryRouteWithChildren,
+}
 
 export const routeTree = rootRoute
-    ._addFileChildren(rootRouteChildren)
-    ._addFileTypes<FileRouteTypes>();
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
 /* prettier-ignore-end */
 

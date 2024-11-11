@@ -18,202 +18,6 @@ export type OrgUnits = {
     organisationUnits: OrgUnit[];
 };
 
-// export interface TrackedEntityInstances {
-//     page: number;
-//     pageSize: number;
-//     total: number;
-//     pageCount: number;
-//     trackedEntityInstances: TrackedEntityInstance[];
-// }
-
-// export interface Relationships {
-//     page: number;
-//     pageSize: number;
-//     total: number;
-//     pageCount: number;
-//     instances: Relationship[];
-// }
-
-// export interface TrackedEntityInstance {
-//     trackedEntity: string;
-//     trackedEntityType: string;
-//     createdAt: string;
-//     createdAtClient: string;
-//     updatedAt: string;
-//     updatedAtClient: string;
-//     orgUnit: string;
-//     inactive: boolean;
-//     deleted: boolean;
-//     potentialDuplicate: boolean;
-//     createdBy: CreatedBy;
-//     updatedBy: CreatedBy;
-//     relationships: Relationship[];
-//     attributes: Array<Partial<Attribute>>;
-//     enrollments: Array<Partial<Enrollment>>;
-//     programOwners: ProgramOwner[];
-// }
-
-// export interface ProgramOwner {
-//     orgUnit: string;
-//     trackedEntity: string;
-//     program: string;
-// }
-
-// export interface Enrollment {
-//     enrollment: string;
-//     createdAt: string;
-//     createdAtClient: string;
-//     updatedAt: string;
-//     updatedAtClient: string;
-//     trackedEntity: string;
-//     program: string;
-//     status: string;
-//     orgUnit: string;
-//     orgUnitName: string;
-//     enrolledAt: string;
-//     occurredAt: string;
-//     followUp: boolean;
-//     deleted: boolean;
-//     storedBy: string;
-//     createdBy: CreatedBy;
-//     updatedBy: CreatedBy;
-//     events: Array<Partial<Event>>;
-//     relationships: Relationship[];
-//     attributes: Attribute[];
-//     notes: object[];
-// }
-
-// export interface Event {
-//     event: string;
-//     status: string;
-//     program: string;
-//     programStage: string;
-//     enrollment: string;
-//     trackedEntity: string;
-//     orgUnit: string;
-//     orgUnitName: string;
-//     relationships: Relationship[];
-//     occurredAt: string;
-//     scheduledAt: string;
-//     storedBy: string;
-//     followup: boolean;
-//     deleted: boolean;
-//     createdAt: string;
-//     updatedAt: string;
-//     attributeOptionCombo: string;
-//     attributeCategoryOptions: string;
-//     completedBy?: string;
-//     completedAt?: string;
-//     assignedUser: Record<string, object>;
-//     createdBy: CreatedBy;
-//     updatedBy: CreatedBy;
-//     dataValues: Array<Partial<DataValue>>;
-//     notes: object[];
-// }
-
-// export interface DataValue {
-//     createdAt: string;
-//     updatedAt: string;
-//     providedElsewhere: boolean;
-//     dataElement: string;
-//     value: string;
-//     createdBy: CreatedBy2;
-//     updatedBy: CreatedBy2;
-// }
-
-// export interface CreatedBy2 {
-//     uid: string;
-//     username: string;
-//     firstName?: string;
-//     surname?: string;
-// }
-
-// export interface Attribute {
-//     attribute: string;
-//     displayName: string;
-//     createdAt: string;
-//     updatedAt: string;
-//     storedBy: string;
-//     valueType: string;
-//     value: string;
-//     code?: string;
-// }
-
-// export interface Relationship {
-//     relationship: string;
-//     relationshipName: string;
-//     relationshipType: string;
-//     createdAt: string;
-//     updatedAt: string;
-//     bidirectional: boolean;
-//     from: From;
-//     to: From;
-// }
-
-// export interface From {
-//     trackedEntityInstance?: Partial<TrackedEntityInstance>;
-//     event?: Partial<Event>;
-//     enrollment?: Partial<Enrollment>;
-// }
-
-// export interface TrackedEntity {
-//     trackedEntity: string;
-//     inactive: boolean;
-//     deleted: boolean;
-//     potentialDuplicate: boolean;
-//     attributes: object[];
-//     programOwners: object[];
-// }
-
-// export interface CreatedBy {
-//     uid: string;
-//     username: string;
-// }
-
-// export interface Events {
-//     page: number;
-//     pageSize: number;
-//     total: number;
-//     pageCount: number;
-//     instances: Event[];
-// }
-
-// export type InstanceColumns =
-//     | "trackedEntity"
-//     | "trackedEntityType"
-//     | "createdAt"
-//     | "createdAtClient"
-//     | "updatedAt"
-//     | "updatedAtClient"
-//     | "orgUnit"
-//     | "inactive"
-//     | "deleted"
-//     | "potentialDuplicate"
-//     | "createdBy"
-//     | "updatedBy"
-//     | "firstEnrollment";
-
-// export type EventColumns =
-//     | "event"
-//     | "status"
-//     | "program"
-//     | "programStage"
-//     | "enrollment"
-//     | "trackedEntity"
-//     | "orgUnit"
-//     | "orgUnitName"
-//     | "occurredAt"
-//     | "scheduledAt"
-//     | "storedBy"
-//     | "followup"
-//     | "deleted"
-//     | "createdAt"
-//     | "updatedAt"
-//     | "attributeOptionCombo"
-//     | "attributeCategoryOptions"
-//     | "completedBy"
-//     | "completedAt";
-
 export interface TrackedEntityType {
     id: string;
 }
@@ -391,16 +195,45 @@ export interface Period extends Option {
     startDate?: string;
     endDate?: string;
     type: "fixed" | "relative" | "range";
+    periodType: FixedPeriodType | RelativePeriodType;
 }
 
 export const DashboardQueryValidator = z.object({
-    pa: z.string().optional(),
-    ind: z.string().optional(),
+    pa: z.union([z.string().array(), z.string()]).optional(),
+    ind: z.union([z.string().array(), z.string()]).optional(),
     level: z.number().optional(),
-    ou: z.string().optional(),
+    ou: z.union([z.string().array(), z.string()]).optional(),
     periods: z.any().array().optional(),
     pageSize: z.number().optional(),
     page: z.number().optional(),
+    filter: z.enum(["period", "ou"]).optional(),
+    counting: z.enum(["projects", "units"]).optional(),
+    mode: z.enum(["multiple", "tags"]).optional(),
+});
+
+export const DataEntryValidator = z.object({
+    ou: z.string().optional(),
+    disabled: z.boolean().optional(),
+});
+export const FormValidator = z.object({
+    editing: z.boolean(),
+    type: z.string().optional(),
+    registration: z.boolean(),
+});
+
+export const InstanceValidator = z.object({
+    editing: z.boolean(),
+    type: z.string().optional(),
+    registration: z.boolean(),
+    stage: z.string().optional(),
+});
+
+export const TrackerValidator = z.object({
+    ou: z.string(),
+    pageSize: z.number().optional(),
+    page: z.number().optional(),
+    type: z.string().optional(),
+    registration: z.boolean(),
 });
 
 export type DashboardQuery = z.infer<typeof DashboardQueryValidator>;
@@ -410,7 +243,7 @@ export interface TrackedEntityInstances {
     trackedEntityInstances: TrackedEntityInstance[];
 }
 
-interface TrackedEntityInstance {
+export interface TrackedEntityInstance {
     created: string;
     orgUnit: string;
     createdAtClient: string;
@@ -437,7 +270,7 @@ interface Attribute {
     value: string;
 }
 
-interface Enrollment {
+export interface Enrollment {
     storedBy: string;
     createdAtClient: string;
     program: string;
@@ -457,7 +290,7 @@ interface Enrollment {
     attributes: Attribute[];
 }
 
-interface Event {
+export interface Event {
     storedBy: string;
     dueDate: string;
     program: string;
@@ -475,11 +308,11 @@ interface Event {
     created: string;
     deleted: boolean;
     attributeOptionCombo: string;
-    dataValues: DataValue[];
+    dataValues: Array<Partial<DataValue>>;
     completedDate?: string;
 }
 
-interface DataValue {
+export interface DataValue {
     lastUpdated: string;
     created: string;
     dataElement: string;
@@ -487,7 +320,7 @@ interface DataValue {
     providedElsewhere: boolean;
 }
 
-interface ProgramOwner {
+export interface ProgramOwner {
     ownerOrgUnit: string;
     program: string;
     trackedEntityInstance: string;
@@ -511,3 +344,240 @@ export type InstanceDisplay = Partial<
 export type EventDisplay = Partial<Event> & {
     values: { [key: string]: string };
 };
+
+export interface AnalyticsStructure {
+    headers: Array<Record<string, string>>;
+    metaData: MetaData;
+    rows: string[][];
+    height: number;
+    headerWidth: number;
+    width: number;
+}
+
+interface MetaData {
+    items: Record<string, { name: string }>;
+    ouNameHierarchy: Record<string, string>;
+    dimensions: Dimensions;
+}
+
+interface Dimensions {
+    pe: string[];
+    ou: string[];
+    co: string[];
+}
+
+export interface SQLView {
+    pager: Pager;
+    listGrid: ListGrid;
+}
+
+interface ListGrid {
+    metaData: MetaData;
+    headerWidth: number;
+    subtitle: string;
+    width: number;
+    title: string;
+    height: number;
+    headers: Header[];
+    rows: string[][];
+}
+
+interface Header {
+    hidden: boolean;
+    meta: boolean;
+    name: keyof AnalyticData;
+    column: string;
+    type: string;
+}
+
+interface Pager {
+    page: number;
+    pageCount: number;
+    total: number;
+    pageSize: number;
+}
+
+export interface AnalyticData {
+    uidlevel1: string;
+    uidlevel2: string;
+    uidlevel3: string;
+    uidlevel4: string;
+    uidlevel5: string;
+    rabKTDhptNW: null | string;
+    pvIOzuzeYrI: null | string;
+    gjDR8EJ4TYj: null | string;
+    pv1jqIeNLbO: string;
+    qPIRLHZ6dTm: string;
+    au4gnriblmx: string;
+    Dz3bAHiSjAf: string;
+    E2fcwOxOuR4: string;
+    daily: string;
+    weekly: string;
+    weeklywednesday: string;
+    weeklythursday: string;
+    weeklysaturday: string;
+    weeklysunday: string;
+    biweekly: string;
+    monthly: string;
+    bimonthly: string;
+    quarterly: string;
+    sixmonthly: string;
+    sixmonthlyapril: string;
+    sixmonthlynov: string;
+    yearly: string;
+    financialapril: string;
+    financialjuly: string;
+    financialoct: string;
+    financialnov: string;
+    vlcuyaFe8XA: null | string;
+    EF7Cwwpegv1: null | string;
+    ef2RxnUK9ac: null | string;
+    RgNQcLejbwX: null | number;
+    TY4BoFr95UI: null | string;
+    rVZlkzOwWhi: null | number;
+    megrn75m57y: null | string;
+    vj0HLP3eHbe: null | string;
+    f9bjMbi3j3j: null | string;
+    gB9GbPqeAzv: null | string;
+    y3hJLGjctPk: string;
+    iInAQ40vDGZ: string;
+    WQcY6nfPouv: string;
+    pIl8z4w8msL: string;
+    EvGGaaviqOn: string;
+    WEudJ6nxlzz: string;
+    TG1QzFgGTex: string;
+    kHRn35W3Gq4: string;
+    VWxBILfLC9s: string;
+    eCbusIaigyj: string;
+    rFSjQbZjJwF: string;
+    AETf2xvUmc8: string;
+    eZrfD4QnQfl: null | string;
+    psi: string;
+    pi: string;
+    ps: string;
+    ao: string;
+    enrollmentdate: string;
+    incidentdate: string;
+    executiondate: string;
+    duedate: string;
+    completeddate: null | string;
+    created: string;
+    lastupdated: string;
+    storedby: string;
+    pistatus: string;
+    psistatus: string;
+    psigeometry: null | string;
+    longitude: null | string;
+    latitude: null | string;
+    ou: string;
+    ouname: string;
+    oucode: null | string;
+    oulevel: number;
+    ougeometry: Record<string, string>;
+    pigeometry: null | string;
+    tei: string;
+}
+
+export type DisplayInstance = Partial<
+    TrackedEntityInstance & {
+        attributesObject: { [key: string]: string };
+        firstEnrollment: string;
+        program: string;
+    }
+>;
+
+interface DatabaseInfo {
+    name: string;
+    user: string;
+    url: string;
+    databaseVersion: string;
+    spatialSupport: boolean;
+}
+
+export interface SystemInfo {
+    contextPath: string;
+    userAgent: string;
+    calendar: string;
+    dateFormat: string;
+    serverDate: string;
+    serverTimeZoneId: string;
+    serverTimeZoneDisplayName: string;
+    lastAnalyticsTableSuccess: string;
+    intervalSinceLastAnalyticsTableSuccess: string;
+    lastAnalyticsTableRuntime: string;
+    version: string;
+    revision: string;
+    buildTime: string;
+    jasperReportsVersion: string;
+    environmentVariable: string;
+    fileStoreProvider: string;
+    readOnlyMode: string;
+    nodeId: string;
+    javaVersion: string;
+    javaVendor: string;
+    javaOpts: string;
+    osName: string;
+    osArchitecture: string;
+    osVersion: string;
+    externalDirectory: string;
+    databaseInfo: DatabaseInfo;
+    readReplicaCount: number;
+    memoryInfo: string;
+    cpuCores: number;
+    encryption: boolean;
+    emailConfigured: boolean;
+    redisEnabled: boolean;
+    systemId: string;
+    systemName: string;
+    clusterHostname: string;
+    isMetadataVersionEnabled: boolean;
+    metadataSyncEnabled: boolean;
+}
+
+export interface HeaderChild {
+    title: string;
+    key?: string;
+    width?: number;
+    span?: number;
+}
+
+export interface HeaderParent extends HeaderChild {
+    children?: (HeaderParent | HeaderChild)[];
+}
+
+export type ExcelHeader = HeaderParent;
+
+export interface ColumnInfo {
+    totalColumns: number;
+    merges: Array<{
+        start: { row: number; col: number };
+        end: { row: number; col: number };
+    }>;
+    columns: Array<{
+        header: string;
+        key: string;
+        width: number;
+    }>;
+}
+
+export interface CellStyle {
+    font?: {
+        bold?: boolean;
+        color?: { argb: string };
+    };
+    fill?: {
+        type: "pattern";
+        pattern: "solid";
+        fgColor: { argb: string };
+    };
+    alignment?: {
+        vertical?: "middle" | "top" | "bottom";
+        horizontal?: "center" | "left" | "right";
+    };
+    border?: {
+        top?: { style: "thin" | "medium" | "thick" };
+        left?: { style: "thin" | "medium" | "thick" };
+        bottom?: { style: "thin" | "medium" | "thick" };
+        right?: { style: "thin" | "medium" | "thick" };
+    };
+}

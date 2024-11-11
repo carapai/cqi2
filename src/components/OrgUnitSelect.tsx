@@ -9,9 +9,11 @@ import { FC } from "react";
 
 const OrgUnitSelect: FC<{
     table: Table<OrgUnit, IndexableType>;
-    value: string;
-    onChange: (newValue: string) => void;
-}> = ({ table, value, onChange }) => {
+    value: string | string[] | undefined;
+    onChange: (newValue: string | string[] | undefined) => void;
+    isMulti?: boolean;
+    disabled?: boolean;
+}> = ({ table, value, onChange, isMulti, disabled }) => {
     const queryClient = useQueryClient();
     const organisationUnits = useLiveQuery(() => table.toArray());
 
@@ -24,7 +26,9 @@ const OrgUnitSelect: FC<{
     };
     return (
         <TreeSelect
+            disabled={disabled}
             treeDataSimpleMode
+            allowClear
             style={{ width: "100%" }}
             value={value}
             dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
@@ -32,6 +36,7 @@ const OrgUnitSelect: FC<{
             onChange={onChange}
             loadData={onLoadData}
             treeData={organisationUnits}
+            multiple={isMulti}
         />
     );
 };

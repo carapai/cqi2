@@ -10,205 +10,258 @@
 
 // Import Routes
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as DataEntryImport } from './routes/data-entry'
-import { Route as DashboardsImport } from './routes/dashboards'
-import { Route as IndexImport } from './routes/index'
-import { Route as DashboardsProjectsImport } from './routes/dashboards.projects'
-import { Route as DashboardsLayeredImport } from './routes/dashboards.layered'
-import { Route as DashboardsIndicatorsImport } from './routes/dashboards.indicators'
-import { Route as DashboardsAdminImport } from './routes/dashboards.admin'
+import { Route as rootRoute } from "./routes/__root";
+import { Route as DataEntryImport } from "./routes/data-entry";
+import { Route as DashboardsImport } from "./routes/dashboards";
+import { Route as IndexImport } from "./routes/index";
+import { Route as DataEntryProgramImport } from "./routes/data-entry.$program";
+import { Route as DashboardsIdImport } from "./routes/dashboards.$id";
+import { Route as DataEntryProgramTrackedEntitiesImport } from "./routes/data-entry.$program.tracked-entities";
+import { Route as DataEntryProgramTrackedEntitiesEntityIndexImport } from "./routes/data-entry.$program.tracked-entities_.$entity.index";
+import { Route as DataEntryProgramTrackedEntitiesEntityFormImport } from "./routes/data-entry.$program.tracked-entities_.$entity.form";
 
 // Create/Update Routes
 
 const DataEntryRoute = DataEntryImport.update({
-  path: '/data-entry',
-  getParentRoute: () => rootRoute,
-} as any)
+    id: "/data-entry",
+    path: "/data-entry",
+    getParentRoute: () => rootRoute,
+} as any);
 
 const DashboardsRoute = DashboardsImport.update({
-  path: '/dashboards',
-  getParentRoute: () => rootRoute,
-} as any)
+    id: "/dashboards",
+    path: "/dashboards",
+    getParentRoute: () => rootRoute,
+} as any);
 
 const IndexRoute = IndexImport.update({
-  path: '/',
-  getParentRoute: () => rootRoute,
-} as any)
+    id: "/",
+    path: "/",
+    getParentRoute: () => rootRoute,
+} as any);
 
-const DashboardsProjectsRoute = DashboardsProjectsImport.update({
-  path: '/projects',
-  getParentRoute: () => DashboardsRoute,
-} as any)
+const DataEntryProgramRoute = DataEntryProgramImport.update({
+    id: "/$program",
+    path: "/$program",
+    getParentRoute: () => DataEntryRoute,
+} as any);
 
-const DashboardsLayeredRoute = DashboardsLayeredImport.update({
-  path: '/layered',
-  getParentRoute: () => DashboardsRoute,
-} as any)
+const DashboardsIdRoute = DashboardsIdImport.update({
+    id: "/$id",
+    path: "/$id",
+    getParentRoute: () => DashboardsRoute,
+} as any);
 
-const DashboardsIndicatorsRoute = DashboardsIndicatorsImport.update({
-  path: '/indicators',
-  getParentRoute: () => DashboardsRoute,
-} as any)
+const DataEntryProgramTrackedEntitiesRoute =
+    DataEntryProgramTrackedEntitiesImport.update({
+        id: "/tracked-entities",
+        path: "/tracked-entities",
+        getParentRoute: () => DataEntryProgramRoute,
+    } as any);
 
-const DashboardsAdminRoute = DashboardsAdminImport.update({
-  path: '/admin',
-  getParentRoute: () => DashboardsRoute,
-} as any)
+const DataEntryProgramTrackedEntitiesEntityIndexRoute =
+    DataEntryProgramTrackedEntitiesEntityIndexImport.update({
+        id: "/tracked-entities_/$entity/",
+        path: "/tracked-entities/$entity/",
+        getParentRoute: () => DataEntryProgramRoute,
+    } as any);
+
+const DataEntryProgramTrackedEntitiesEntityFormRoute =
+    DataEntryProgramTrackedEntitiesEntityFormImport.update({
+        id: "/tracked-entities_/$entity/form",
+        path: "/tracked-entities/$entity/form",
+        getParentRoute: () => DataEntryProgramRoute,
+    } as any);
 
 // Populate the FileRoutesByPath interface
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
+declare module "@tanstack/react-router" {
+    interface FileRoutesByPath {
+        "/": {
+            id: "/";
+            path: "/";
+            fullPath: "/";
+            preLoaderRoute: typeof IndexImport;
+            parentRoute: typeof rootRoute;
+        };
+        "/dashboards": {
+            id: "/dashboards";
+            path: "/dashboards";
+            fullPath: "/dashboards";
+            preLoaderRoute: typeof DashboardsImport;
+            parentRoute: typeof rootRoute;
+        };
+        "/data-entry": {
+            id: "/data-entry";
+            path: "/data-entry";
+            fullPath: "/data-entry";
+            preLoaderRoute: typeof DataEntryImport;
+            parentRoute: typeof rootRoute;
+        };
+        "/dashboards/$id": {
+            id: "/dashboards/$id";
+            path: "/$id";
+            fullPath: "/dashboards/$id";
+            preLoaderRoute: typeof DashboardsIdImport;
+            parentRoute: typeof DashboardsImport;
+        };
+        "/data-entry/$program": {
+            id: "/data-entry/$program";
+            path: "/$program";
+            fullPath: "/data-entry/$program";
+            preLoaderRoute: typeof DataEntryProgramImport;
+            parentRoute: typeof DataEntryImport;
+        };
+        "/data-entry/$program/tracked-entities": {
+            id: "/data-entry/$program/tracked-entities";
+            path: "/tracked-entities";
+            fullPath: "/data-entry/$program/tracked-entities";
+            preLoaderRoute: typeof DataEntryProgramTrackedEntitiesImport;
+            parentRoute: typeof DataEntryProgramImport;
+        };
+        "/data-entry/$program/tracked-entities_/$entity/form": {
+            id: "/data-entry/$program/tracked-entities_/$entity/form";
+            path: "/tracked-entities/$entity/form";
+            fullPath: "/data-entry/$program/tracked-entities/$entity/form";
+            preLoaderRoute: typeof DataEntryProgramTrackedEntitiesEntityFormImport;
+            parentRoute: typeof DataEntryProgramImport;
+        };
+        "/data-entry/$program/tracked-entities_/$entity/": {
+            id: "/data-entry/$program/tracked-entities_/$entity/";
+            path: "/tracked-entities/$entity";
+            fullPath: "/data-entry/$program/tracked-entities/$entity";
+            preLoaderRoute: typeof DataEntryProgramTrackedEntitiesEntityIndexImport;
+            parentRoute: typeof DataEntryProgramImport;
+        };
     }
-    '/dashboards': {
-      id: '/dashboards'
-      path: '/dashboards'
-      fullPath: '/dashboards'
-      preLoaderRoute: typeof DashboardsImport
-      parentRoute: typeof rootRoute
-    }
-    '/data-entry': {
-      id: '/data-entry'
-      path: '/data-entry'
-      fullPath: '/data-entry'
-      preLoaderRoute: typeof DataEntryImport
-      parentRoute: typeof rootRoute
-    }
-    '/dashboards/admin': {
-      id: '/dashboards/admin'
-      path: '/admin'
-      fullPath: '/dashboards/admin'
-      preLoaderRoute: typeof DashboardsAdminImport
-      parentRoute: typeof DashboardsImport
-    }
-    '/dashboards/indicators': {
-      id: '/dashboards/indicators'
-      path: '/indicators'
-      fullPath: '/dashboards/indicators'
-      preLoaderRoute: typeof DashboardsIndicatorsImport
-      parentRoute: typeof DashboardsImport
-    }
-    '/dashboards/layered': {
-      id: '/dashboards/layered'
-      path: '/layered'
-      fullPath: '/dashboards/layered'
-      preLoaderRoute: typeof DashboardsLayeredImport
-      parentRoute: typeof DashboardsImport
-    }
-    '/dashboards/projects': {
-      id: '/dashboards/projects'
-      path: '/projects'
-      fullPath: '/dashboards/projects'
-      preLoaderRoute: typeof DashboardsProjectsImport
-      parentRoute: typeof DashboardsImport
-    }
-  }
 }
 
 // Create and export the route tree
 
 interface DashboardsRouteChildren {
-  DashboardsAdminRoute: typeof DashboardsAdminRoute
-  DashboardsIndicatorsRoute: typeof DashboardsIndicatorsRoute
-  DashboardsLayeredRoute: typeof DashboardsLayeredRoute
-  DashboardsProjectsRoute: typeof DashboardsProjectsRoute
+    DashboardsIdRoute: typeof DashboardsIdRoute;
 }
 
 const DashboardsRouteChildren: DashboardsRouteChildren = {
-  DashboardsAdminRoute: DashboardsAdminRoute,
-  DashboardsIndicatorsRoute: DashboardsIndicatorsRoute,
-  DashboardsLayeredRoute: DashboardsLayeredRoute,
-  DashboardsProjectsRoute: DashboardsProjectsRoute,
-}
+    DashboardsIdRoute: DashboardsIdRoute,
+};
 
 const DashboardsRouteWithChildren = DashboardsRoute._addFileChildren(
-  DashboardsRouteChildren,
-)
+    DashboardsRouteChildren,
+);
+
+interface DataEntryProgramRouteChildren {
+    DataEntryProgramTrackedEntitiesRoute: typeof DataEntryProgramTrackedEntitiesRoute;
+    DataEntryProgramTrackedEntitiesEntityFormRoute: typeof DataEntryProgramTrackedEntitiesEntityFormRoute;
+    DataEntryProgramTrackedEntitiesEntityIndexRoute: typeof DataEntryProgramTrackedEntitiesEntityIndexRoute;
+}
+
+const DataEntryProgramRouteChildren: DataEntryProgramRouteChildren = {
+    DataEntryProgramTrackedEntitiesRoute: DataEntryProgramTrackedEntitiesRoute,
+    DataEntryProgramTrackedEntitiesEntityFormRoute:
+        DataEntryProgramTrackedEntitiesEntityFormRoute,
+    DataEntryProgramTrackedEntitiesEntityIndexRoute:
+        DataEntryProgramTrackedEntitiesEntityIndexRoute,
+};
+
+const DataEntryProgramRouteWithChildren =
+    DataEntryProgramRoute._addFileChildren(DataEntryProgramRouteChildren);
+
+interface DataEntryRouteChildren {
+    DataEntryProgramRoute: typeof DataEntryProgramRouteWithChildren;
+}
+
+const DataEntryRouteChildren: DataEntryRouteChildren = {
+    DataEntryProgramRoute: DataEntryProgramRouteWithChildren,
+};
+
+const DataEntryRouteWithChildren = DataEntryRoute._addFileChildren(
+    DataEntryRouteChildren,
+);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/dashboards': typeof DashboardsRouteWithChildren
-  '/data-entry': typeof DataEntryRoute
-  '/dashboards/admin': typeof DashboardsAdminRoute
-  '/dashboards/indicators': typeof DashboardsIndicatorsRoute
-  '/dashboards/layered': typeof DashboardsLayeredRoute
-  '/dashboards/projects': typeof DashboardsProjectsRoute
+    "/": typeof IndexRoute;
+    "/dashboards": typeof DashboardsRouteWithChildren;
+    "/data-entry": typeof DataEntryRouteWithChildren;
+    "/dashboards/$id": typeof DashboardsIdRoute;
+    "/data-entry/$program": typeof DataEntryProgramRouteWithChildren;
+    "/data-entry/$program/tracked-entities": typeof DataEntryProgramTrackedEntitiesRoute;
+    "/data-entry/$program/tracked-entities/$entity/form": typeof DataEntryProgramTrackedEntitiesEntityFormRoute;
+    "/data-entry/$program/tracked-entities/$entity": typeof DataEntryProgramTrackedEntitiesEntityIndexRoute;
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/dashboards': typeof DashboardsRouteWithChildren
-  '/data-entry': typeof DataEntryRoute
-  '/dashboards/admin': typeof DashboardsAdminRoute
-  '/dashboards/indicators': typeof DashboardsIndicatorsRoute
-  '/dashboards/layered': typeof DashboardsLayeredRoute
-  '/dashboards/projects': typeof DashboardsProjectsRoute
+    "/": typeof IndexRoute;
+    "/dashboards": typeof DashboardsRouteWithChildren;
+    "/data-entry": typeof DataEntryRouteWithChildren;
+    "/dashboards/$id": typeof DashboardsIdRoute;
+    "/data-entry/$program": typeof DataEntryProgramRouteWithChildren;
+    "/data-entry/$program/tracked-entities": typeof DataEntryProgramTrackedEntitiesRoute;
+    "/data-entry/$program/tracked-entities/$entity/form": typeof DataEntryProgramTrackedEntitiesEntityFormRoute;
+    "/data-entry/$program/tracked-entities/$entity": typeof DataEntryProgramTrackedEntitiesEntityIndexRoute;
 }
 
 export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/dashboards': typeof DashboardsRouteWithChildren
-  '/data-entry': typeof DataEntryRoute
-  '/dashboards/admin': typeof DashboardsAdminRoute
-  '/dashboards/indicators': typeof DashboardsIndicatorsRoute
-  '/dashboards/layered': typeof DashboardsLayeredRoute
-  '/dashboards/projects': typeof DashboardsProjectsRoute
+    __root__: typeof rootRoute;
+    "/": typeof IndexRoute;
+    "/dashboards": typeof DashboardsRouteWithChildren;
+    "/data-entry": typeof DataEntryRouteWithChildren;
+    "/dashboards/$id": typeof DashboardsIdRoute;
+    "/data-entry/$program": typeof DataEntryProgramRouteWithChildren;
+    "/data-entry/$program/tracked-entities": typeof DataEntryProgramTrackedEntitiesRoute;
+    "/data-entry/$program/tracked-entities_/$entity/form": typeof DataEntryProgramTrackedEntitiesEntityFormRoute;
+    "/data-entry/$program/tracked-entities_/$entity/": typeof DataEntryProgramTrackedEntitiesEntityIndexRoute;
 }
 
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/dashboards'
-    | '/data-entry'
-    | '/dashboards/admin'
-    | '/dashboards/indicators'
-    | '/dashboards/layered'
-    | '/dashboards/projects'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/dashboards'
-    | '/data-entry'
-    | '/dashboards/admin'
-    | '/dashboards/indicators'
-    | '/dashboards/layered'
-    | '/dashboards/projects'
-  id:
-    | '__root__'
-    | '/'
-    | '/dashboards'
-    | '/data-entry'
-    | '/dashboards/admin'
-    | '/dashboards/indicators'
-    | '/dashboards/layered'
-    | '/dashboards/projects'
-  fileRoutesById: FileRoutesById
+    fileRoutesByFullPath: FileRoutesByFullPath;
+    fullPaths:
+        | "/"
+        | "/dashboards"
+        | "/data-entry"
+        | "/dashboards/$id"
+        | "/data-entry/$program"
+        | "/data-entry/$program/tracked-entities"
+        | "/data-entry/$program/tracked-entities/$entity/form"
+        | "/data-entry/$program/tracked-entities/$entity";
+    fileRoutesByTo: FileRoutesByTo;
+    to:
+        | "/"
+        | "/dashboards"
+        | "/data-entry"
+        | "/dashboards/$id"
+        | "/data-entry/$program"
+        | "/data-entry/$program/tracked-entities"
+        | "/data-entry/$program/tracked-entities/$entity/form"
+        | "/data-entry/$program/tracked-entities/$entity";
+    id:
+        | "__root__"
+        | "/"
+        | "/dashboards"
+        | "/data-entry"
+        | "/dashboards/$id"
+        | "/data-entry/$program"
+        | "/data-entry/$program/tracked-entities"
+        | "/data-entry/$program/tracked-entities_/$entity/form"
+        | "/data-entry/$program/tracked-entities_/$entity/";
+    fileRoutesById: FileRoutesById;
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  DashboardsRoute: typeof DashboardsRouteWithChildren
-  DataEntryRoute: typeof DataEntryRoute
+    IndexRoute: typeof IndexRoute;
+    DashboardsRoute: typeof DashboardsRouteWithChildren;
+    DataEntryRoute: typeof DataEntryRouteWithChildren;
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  DashboardsRoute: DashboardsRouteWithChildren,
-  DataEntryRoute: DataEntryRoute,
-}
+    IndexRoute: IndexRoute,
+    DashboardsRoute: DashboardsRouteWithChildren,
+    DataEntryRoute: DataEntryRouteWithChildren,
+};
 
 export const routeTree = rootRoute
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+    ._addFileChildren(rootRouteChildren)
+    ._addFileTypes<FileRouteTypes>();
 
 /* prettier-ignore-end */
 
@@ -229,30 +282,39 @@ export const routeTree = rootRoute
     "/dashboards": {
       "filePath": "dashboards.tsx",
       "children": [
-        "/dashboards/admin",
-        "/dashboards/indicators",
-        "/dashboards/layered",
-        "/dashboards/projects"
+        "/dashboards/$id"
       ]
     },
     "/data-entry": {
-      "filePath": "data-entry.tsx"
+      "filePath": "data-entry.tsx",
+      "children": [
+        "/data-entry/$program"
+      ]
     },
-    "/dashboards/admin": {
-      "filePath": "dashboards.admin.tsx",
+    "/dashboards/$id": {
+      "filePath": "dashboards.$id.tsx",
       "parent": "/dashboards"
     },
-    "/dashboards/indicators": {
-      "filePath": "dashboards.indicators.tsx",
-      "parent": "/dashboards"
+    "/data-entry/$program": {
+      "filePath": "data-entry.$program.tsx",
+      "parent": "/data-entry",
+      "children": [
+        "/data-entry/$program/tracked-entities",
+        "/data-entry/$program/tracked-entities_/$entity/form",
+        "/data-entry/$program/tracked-entities_/$entity/"
+      ]
     },
-    "/dashboards/layered": {
-      "filePath": "dashboards.layered.tsx",
-      "parent": "/dashboards"
+    "/data-entry/$program/tracked-entities": {
+      "filePath": "data-entry.$program.tracked-entities.tsx",
+      "parent": "/data-entry/$program"
     },
-    "/dashboards/projects": {
-      "filePath": "dashboards.projects.tsx",
-      "parent": "/dashboards"
+    "/data-entry/$program/tracked-entities_/$entity/form": {
+      "filePath": "data-entry.$program.tracked-entities_.$entity.form.tsx",
+      "parent": "/data-entry/$program"
+    },
+    "/data-entry/$program/tracked-entities_/$entity/": {
+      "filePath": "data-entry.$program.tracked-entities_.$entity.index.tsx",
+      "parent": "/data-entry/$program"
     }
   }
 }

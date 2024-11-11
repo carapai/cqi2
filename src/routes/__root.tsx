@@ -1,109 +1,197 @@
-import { Spacer, Stack, Text, Box } from "@chakra-ui/react";
-import { QueryClient } from "@tanstack/react-query";
+import { initialQueryOptions } from "@/queryOptions";
+import { Spacer, Stack, Text } from "@chakra-ui/react";
+import { QueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import {
-  Link,
-  Outlet,
-  createRootRouteWithContext,
+    Link,
+    Outlet,
+    createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { Button, Image } from "antd";
 
 export const Route = createRootRouteWithContext<{
-  queryClient: QueryClient;
+    queryClient: QueryClient;
 }>()({
-  component: RootComponent,
+    component: RootComponent,
+    loader: ({ context: { queryClient } }) =>
+        queryClient.ensureQueryData(initialQueryOptions),
+    pendingComponent: () => <div>Loading...</div>,
 });
 
 function RootComponent() {
-  return (
-    <Stack w="100vw" h="100vh" bgColor="#f5f5f5" p="10px">
-      <Stack
-        direction="row"
-        alignItems="center"
-        p="10px"
-        bgColor="white"
-        borderRadius="md"
-        boxShadow="sm"
-        spacing={6}
-      >
-        <Image
-          src="https://raw.githubusercontent.com/HISP-Uganda/covid-dashboard/master/src/images/Coat_of_arms_of_Uganda.svg"
-          width="50px"
-        />
+    const {
+        data: { ou, viewUnits, options, indicators },
+    } = useSuspenseQuery(initialQueryOptions);
 
-        <Text fontSize="xl" fontWeight="bold" color="#1A202C">
-          Continuous Quality Improvement (CQI) Database
-        </Text>
-
-        <Spacer />
-
-        <Stack direction="row" spacing={4}>
-          <Link to="/">
-            <Button
-              type="primary"
-              shape="round"
-              style={{ backgroundColor: "#3182CE", borderColor: "#3182CE" }}
+    const pa = options?.[0].code;
+    const ind = indicators.find((i) => i["kuVtv8R9n8q"] === pa)?.["event"];
+    return (
+        <Stack w="100vw" h="100vh" bgColor="white" p="10px">
+            <Stack
+                direction="row"
+                alignItems="center"
+                p="10px"
+                bgColor="white"
+                borderRadius="md"
+                boxShadow="sm"
+                spacing={6}
+                h="48px"
+                maxH="48px"
+                minH="48px"
             >
-              Home
-            </Button>
-          </Link>
+                <Image
+                    src="https://raw.githubusercontent.com/HISP-Uganda/covid-dashboard/master/src/images/Coat_of_arms_of_Uganda.svg"
+                    width="40px"
+                />
 
-          <Link to="/data-entry">
-            <Button
-              shape="round"
-              style={{ borderColor: "#2B6CB0", color: "#2B6CB0" }}
-            >
-              Data Entry
-            </Button>
-          </Link>
+                <Text fontSize="xl" fontWeight="bold" color="#1A202C">
+                    Continuous Quality Improvement (CQI) Database
+                </Text>
+                <Spacer />
+                <Stack direction="row" spacing={4}>
+                    <Link to="/">
+                        <Button
+                            type="primary"
+                            shape="round"
+                            style={{
+                                backgroundColor: "#3182CE",
+                                borderColor: "#3182CE",
+                            }}
+                        >
+                            Home
+                        </Button>
+                    </Link>
 
-          <Link to="/dashboards/layered">
-            <Button
-              shape="round"
-              style={{ borderColor: "#2C5282", color: "#2C5282" }}
-            >
-              Layered Dashboard
-            </Button>
-          </Link>
+                    <Link
+                        to="/data-entry/$program/tracked-entities"
+                        activeProps={{ style: { background: "yellow" } }}
+                        search={{
+                            ou,
+                            registration: true,
+                            pageSize: 10,
+                            page: 1,
+                            type: "KSy4dEvpMWi",
+                        }}
+                        params={{ program: "vMfIVFcRWlu" }}
+                    >
+                        <Button
+                            shape="round"
+                            style={{ borderColor: "#2B6CB0", color: "#2B6CB0" }}
+                        >
+                            Data Entry
+                        </Button>
+                    </Link>
 
-          <Link to="/dashboards/indicators">
-            <Button
-              shape="round"
-              style={{ borderColor: "#2C7A7B", color: "#2C7A7B" }}
-            >
-              All Indicators
-            </Button>
-          </Link>
+                    <Link
+                        to="/dashboards/$id"
+                        params={{ id: "layered" }}
+                        activeProps={{ style: { background: "yellow" } }}
+                        search={{
+                            periods: [
+                                {
+                                    value: "THIS_YEAR",
+                                    label: "This Year",
+                                    periodType: "YEARLY",
+                                },
+                                {
+                                    value: "LAST_YEAR",
+                                    label: "Last Year",
+                                    periodType: "YEARLY",
+                                },
+                            ],
+                            ou: viewUnits,
+                            pa,
+                            ind,
+                        }}
+                    >
+                        <Button
+                            shape="round"
+                            style={{ borderColor: "#2C5282", color: "#2C5282" }}
+                        >
+                            Layered Dashboard
+                        </Button>
+                    </Link>
 
-          <Link to="/dashboards/projects" search={{ page: 1, pageSize: 10 }}>
-            <Button
-              shape="round"
-              style={{ borderColor: "#2F855A", color: "#2F855A" }}
-            >
-              Projects
-            </Button>
-          </Link>
+                    <Link
+                        to="/dashboards/$id"
+                        params={{ id: "indicators" }}
+                        activeProps={{ style: { background: "yellow" } }}
+                        search={{
+                            periods: [
+                                {
+                                    value: "THIS_YEAR",
+                                    label: "This Year",
+                                    periodType: "YEARLY",
+                                },
+                                {
+                                    value: "LAST_YEAR",
+                                    label: "Last Year",
+                                    periodType: "YEARLY",
+                                },
+                            ],
+                            ou: viewUnits,
+                            filter: "period",
+                            mode: "multiple",
+                        }}
+                    >
+                        <Button
+                            shape="round"
+                            style={{ borderColor: "#2C7A7B", color: "#2C7A7B" }}
+                        >
+                            All Indicators
+                        </Button>
+                    </Link>
 
-          <Link to="/dashboards/admin">
-            <Button
-              shape="round"
-              style={{ borderColor: "#9B2C2C", color: "#9B2C2C" }}
-            >
-              Admin Dashboard
-            </Button>
-          </Link>
+                    <Link
+                        to="/dashboards/$id"
+                        params={{ id: "projects" }}
+                        search={{
+                            page: 1,
+                            pageSize: 10,
+                            ou: viewUnits,
+                            mode: "multiple",
+                        }}
+                        activeProps={{ style: { background: "yellow" } }}
+                    >
+                        <Button
+                            shape="round"
+                            style={{ borderColor: "#2F855A", color: "#2F855A" }}
+                        >
+                            Projects
+                        </Button>
+                    </Link>
+
+                    <Link
+                        to="/dashboards/$id"
+                        params={{ id: "admin" }}
+                        search={{
+                            periods: [
+                                {
+                                    value: "THIS_YEAR",
+                                    label: "This Year",
+                                    periodType: "YEARLY",
+                                },
+                                {
+                                    value: "LAST_YEAR",
+                                    label: "Last Year",
+                                    periodType: "YEARLY",
+                                },
+                            ],
+                            ou: viewUnits,
+                            counting: "projects",
+                            mode: "multiple",
+                        }}
+                        activeProps={{ style: { background: "yellow" } }}
+                    >
+                        <Button
+                            shape="round"
+                            style={{ borderColor: "#9B2C2C", color: "#9B2C2C" }}
+                        >
+                            Admin Dashboard
+                        </Button>
+                    </Link>
+                </Stack>
+            </Stack>
+            <Outlet />
         </Stack>
-      </Stack>
-
-      <Box
-        mt={5}
-        p={5}
-        borderRadius="md"
-        boxShadow="md"
-        bgColor="white"
-        flexGrow={1}
-      >
-        <Outlet />
-      </Box>
-    </Stack>
-  );
+    );
 }

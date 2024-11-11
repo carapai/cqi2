@@ -28,7 +28,7 @@ import {
     Period,
     RelativePeriodType,
 } from "@/interfaces";
-import { createOptions2, fixedPeriods, relativePeriods } from "@/utils";
+import { createOptions2, fixedPeriods, relativePeriods } from "@/utils/utils";
 
 const relativePeriodTypeOptions = createOptions2(
     [
@@ -82,7 +82,7 @@ const PeriodPicker = ({
     const [relativePeriodType, setRelativePeriodType] =
         useState<RelativePeriodType>("YEARLY");
     const [fixedPeriodType, setFixedPeriodType] =
-        useState<FixedPeriodType>("MONTHLY");
+        useState<FixedPeriodType>("YEARLY");
 
     const [selectedPeriods, setSelectedPeriods] = useState<Array<Period>>(
         periods ?? [],
@@ -182,6 +182,8 @@ const PeriodPicker = ({
                                                                             label,
                                                                             value,
                                                                             type: "relative",
+                                                                            periodType:
+                                                                                relativePeriodType,
                                                                         },
                                                                     ],
                                                                 )
@@ -257,6 +259,8 @@ const PeriodPicker = ({
                                                                             value: val.id,
                                                                             label: val.name,
                                                                             type: "fixed",
+                                                                            periodType:
+                                                                                fixedPeriodType,
                                                                         },
                                                                     ],
                                                                 )
@@ -289,6 +293,8 @@ const PeriodPicker = ({
                                                       const opt: Period = {
                                                           ...val,
                                                           type: "relative",
+                                                          periodType:
+                                                              relativePeriodType,
                                                       };
                                                       return opt;
                                                   },
@@ -307,6 +313,8 @@ const PeriodPicker = ({
                                                             startDate,
                                                             endDate,
                                                             type: "fixed",
+                                                            periodType:
+                                                                fixedPeriodType,
                                                         };
                                                     },
                                                 )

@@ -4,6 +4,7 @@ import { ChakraProvider } from "@chakra-ui/react";
 import {
     RouterProvider,
     createHashHistory,
+    ErrorComponent,
     createRouter,
 } from "@tanstack/react-router";
 import { ConfigProvider } from "antd";
@@ -11,6 +12,7 @@ import { ConfigProvider } from "antd";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
+import { Loading } from "./components/Loading";
 
 const queryClient = new QueryClient({
     defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 0 } },
@@ -22,7 +24,10 @@ const router = createRouter({
     context: {
         queryClient,
     },
-    defaultPreload: false,
+    defaultPreload: "intent",
+    defaultPreloadStaleTime: 0,
+    defaultPendingComponent: () => <Loading spinnerColor="border-blue-600" />,
+    defaultErrorComponent: ({ error }) => <ErrorComponent error={error} />,
     history,
 });
 

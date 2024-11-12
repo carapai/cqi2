@@ -283,11 +283,23 @@ export const computerIndicator = (
         sum(denominators) > 0
     ) {
         value = sum(numerators) / sum(denominators);
+
+        return {
+            value,
+            numerator: sum(numerators),
+            denominator: sum(denominators),
+        };
     } else if (sum(denominators) === 0) {
         value = 0;
+
+        return {
+            value,
+            numerator: sum(numerators),
+            denominator: sum(denominators),
+        };
     }
 
-    return value;
+    return { value: 0, numerator: "-", denominator: "-" };
 };
 
 export const downloadProjects = () => {};
@@ -338,7 +350,7 @@ export const downloadIndicators = async ({
                   if (available.length > 0) {
                       acc[pe] = new Intl.NumberFormat("en-US", {
                           style: "percent",
-                      }).format(computerIndicator(available));
+                      }).format(computerIndicator(available).value);
                   } else {
                       acc[pe] = "-";
                   }
@@ -357,7 +369,7 @@ export const downloadIndicators = async ({
                   if (available.length > 0) {
                       acc[ou] = new Intl.NumberFormat("en-US", {
                           style: "percent",
-                      }).format(computerIndicator(available));
+                      }).format(computerIndicator(available).value);
                   } else {
                       acc[ou] = "-";
                   }
@@ -412,7 +424,7 @@ export const downloadLayered = async ({
             if (available.length > 0) {
                 acc[pe] = new Intl.NumberFormat("en-US", {
                     style: "percent",
-                }).format(computerIndicator(available));
+                }).format(computerIndicator(available).value);
             } else {
                 acc[pe] = "-";
             }

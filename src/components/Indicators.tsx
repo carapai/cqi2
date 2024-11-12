@@ -7,6 +7,7 @@ import { analyticsStructureQueryOptions } from "@/queryOptions";
 import { Dictionary } from "lodash";
 import { downloadIndicators } from "@/utils/utils";
 import { useEffect, useState } from "react";
+import { Loading } from "@/components/Loading";
 
 export default function Indicators() {
     const navigate = useNavigate({ from: "/dashboards/$id" });
@@ -43,7 +44,7 @@ export default function Indicators() {
             ind: search.ind,
         }),
     );
-    if (isLoading || !data) return <p>Loading...</p>;
+    if (isLoading || !data) return <Loading />;
     return (
         <Stack>
             <Stack direction="row">

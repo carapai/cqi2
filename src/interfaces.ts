@@ -581,3 +581,44 @@ export interface CellStyle {
         right?: { style: "thin" | "medium" | "thick" };
     };
 }
+
+export interface DevApp {
+    version: string;
+    name: string;
+    appType: string;
+    appStorageSource: string;
+    folderName: string;
+    icons: Icons;
+    activities: Activities;
+    launchUrl: string;
+    baseUrl: string;
+    authorities: string[];
+    appState: string;
+    key: string;
+    bundled: boolean;
+    launch_path: string;
+    default_locale: string;
+    short_name: string;
+    core_app: boolean;
+}
+
+interface Activities {
+    dhis: Dhis;
+}
+
+interface Dhis {
+    href: string;
+}
+
+interface Icons {
+    "48": string;
+}
+
+export interface ProdApp {
+    name: string;
+    namespace: string;
+    defaultAction: string;
+    displayName: string;
+    icon: string;
+    description: string;
+}

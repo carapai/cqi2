@@ -1,3 +1,4 @@
+import { Loading } from "@/components/Loading";
 import OrgUnitSelect from "@/components/OrgUnitSelect";
 import PeriodPicker from "@/components/PeriodPicker";
 import { db } from "@/db";
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/dashboards")({
     validateSearch: DashboardQueryValidator,
     loader: ({ context: { queryClient } }) =>
         queryClient.ensureQueryData(dashboardsQueryOptions()),
-    pendingComponent: () => <div>Loading...</div>,
+    pendingComponent: () => <Loading />,
 });
 
 const findIndicators = (

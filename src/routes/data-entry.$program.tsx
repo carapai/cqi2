@@ -14,12 +14,13 @@ import {
 } from "@tanstack/react-router";
 import { Select } from "antd";
 import { isArray } from "lodash";
+import { Loading } from "@/components/Loading";
 
 export const Route = createFileRoute("/data-entry/$program")({
     component: DataEntryProgramComponent,
     loader: ({ context: { queryClient }, params: { program } }) =>
         queryClient.ensureQueryData(programQueryOptions(program)),
-    pendingComponent: () => <div>Loading...</div>,
+    pendingComponent: () => <Loading />,
 });
 
 function DataEntryProgramComponent() {

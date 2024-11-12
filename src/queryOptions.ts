@@ -1,9 +1,11 @@
 import { getDHIS2Resource } from "@/dhis2";
 import {
     DashboardQuery,
+    DevApp,
     DisplayInstance,
     OrgUnit,
     Period,
+    ProdApp,
     TrackedEntityInstance,
     TrackedEntityInstances,
 } from "@/interfaces";
@@ -211,6 +213,34 @@ export const initialQueryOptions = queryOptions({
                 fields: "options[id,code,name]",
             },
         });
+        let apps: Array<{ name: string; image: string; path: string }> = [];
+
+        if (process.env.NODE_ENV === "development") {
+            const currentApps = await getDHIS2Resource<Array<DevApp>>({
+                resource: "apps",
+            });
+
+            apps = currentApps.map(
+                ({ baseUrl, name, launchUrl, icons: { "48": icon } }) => ({
+                    path: launchUrl,
+                    name,
+                    image: `${baseUrl}/${icon}`,
+                }),
+            );
+        } else {
+            const { modules } = await getDHIS2Resource<{
+                modules: Array<ProdApp>;
+            }>({
+                resource: "dhis-web-commons/menu/getModules.action",
+                includeApi: false,
+            });
+            apps = modules.map(({ defaultAction, displayName, icon }) => ({
+                name: displayName,
+                path: defaultAction,
+                image: icon,
+            }));
+        }
+
         const { programs } = await getDHIS2Resource<{
             programs: Array<{
                 id: string;
@@ -243,6 +273,7 @@ export const initialQueryOptions = queryOptions({
             options,
             organisationUnitLevels,
             indicators,
+            apps,
         };
     },
 });

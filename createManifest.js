@@ -19,7 +19,7 @@ const webapp = {
         },
     },
     icons: {
-        48: "dhis2-app-icon.svg",
+        48: "dhis2-app-icon.png",
     },
     manifest_generated_at: new Date().toISOString(),
     display: "standalone",

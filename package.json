@@ -3,6 +3,7 @@
     "private": true,
     "version": "0.0.1",
     "type": "module",
+	"description": "CQI App2",
     "scripts": {
         "dev": "vite --port=3000",
         "prebuild": "node createManifest.js",

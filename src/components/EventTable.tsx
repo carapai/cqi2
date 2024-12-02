@@ -4,9 +4,10 @@ import type { TableProps } from "antd";
 import { Spacer, Stack } from "@chakra-ui/react";
 import { useState } from "react";
 import { generateUid } from "@/utils/uid";
-import { useParams, useSearch } from "@tanstack/react-router";
+import { useLoaderData, useParams, useSearch } from "@tanstack/react-router";
 import { formElements } from "./form-elements";
 import dayjs from "dayjs";
+import { deleteDHIS2Resource, postDHIS2Resource } from "@/dhis2";
 
 export default function EventTable({
     events,
@@ -16,8 +17,13 @@ export default function EventTable({
     programStageDataElements: ProgramStageDataElement[];
 }) {
     const [currentEvent, setCurrentEvent] = useState<string>("");
+    const [isSaved, setIsSaved] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const { ou, stage } = useSearch({
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
+    const { stage } = useSearch({
+        from: "/data-entry/$program/tracked-entities_/$entity/",
+    });
+    const { orgUnit } = useLoaderData({
         from: "/data-entry/$program/tracked-entities_/$entity/",
     });
     const { program, entity } = useParams({
@@ -125,49 +131,87 @@ export default function EventTable({
             align: "center",
             key: "action",
             width: 90,
-            render: (_: string, row: Partial<Event>) => (
+            render: (_, { event = "" }) => (
                 <Stack direction="row" alignItems="center" gap={2}>
-                    <Button danger>Delete</Button>
-                    {currentEvent === row.event ? (
-                        <Button
-                            onClick={() => onSave()}
-                            loading={isLoading && row.event === currentEvent}
-                            type="primary"
-                        >
-                            Save
-                        </Button>
+                    {currentEvent === event ? (
+                        <>
+                            <Button onClick={() => cancel(event)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={() => onSave()}
+                                loading={isLoading && event === currentEvent}
+                                type="primary"
+                            >
+                                Save
+                            </Button>
+                        </>
                     ) : (
-                        <Button
-                            onClick={() => setCurrentEvent(row.event ?? "")}
-                            type="primary"
-                        >
-                            Edit
-                        </Button>
+                        <>
+                            <Button onClick={() => edit(event)} type="primary">
+                                Edit
+                            </Button>
+                            <Button
+                                danger
+                                onClick={() => onDelete(event)}
+                                loading={isDeleting && event === currentEvent}
+                            >
+                                Delete
+                            </Button>
+                        </>
                     )}
                 </Stack>
             ),
         },
     ];
 
-    const add = () => {
-        const event = generateUid();
-        setAvailableEvents((prev) => {
-            if (prev) {
-                return [
-                    ...prev,
-                    {
-                        event,
-                        orgUnit: ou,
-                        dataValues: [],
-                        eventDate: "",
-                        program,
-                        trackedEntityInstance: entity,
-                        programStage: stage,
-                    },
-                ];
+    const cancel = (event: string) => {
+        if (isSaved) {
+            setCurrentEvent(() => "");
+        } else {
+            setAvailableEvents((prev) => prev.filter((e) => e.event !== event));
+        }
+    };
+
+    const edit = (event: string) => {
+        setCurrentEvent(() => event);
+        setIsSaved(() => true);
+    };
+
+    const onDelete = async (event: string) => {
+        setCurrentEvent(() => event);
+        setIsDeleting(() => true);
+        try {
+            if (isSaved) {
+                await deleteDHIS2Resource({
+                    resource: "events",
+                    id: event,
+                });
             }
-            return [];
-        });
+            setAvailableEvents((prev) => prev.filter((e) => e.event !== event));
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setIsDeleting(() => false);
+            setCurrentEvent(() => "");
+        }
+    };
+
+    const add = () => {
+        setIsSaved(() => false);
+        const event = generateUid();
+        setAvailableEvents((prev) => [
+            ...prev,
+            {
+                event,
+                orgUnit,
+                dataValues: [],
+                eventDate: "",
+                program,
+                trackedEntityInstance: entity,
+                programStage: stage,
+            },
+        ]);
         setCurrentEvent(event);
     };
     const onChange = (event: string, dataElement: string, value: string) => {
@@ -214,9 +258,21 @@ export default function EventTable({
     };
     const onSave = async () => {
         setIsLoading(() => true);
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        setIsLoading(() => false);
-        setCurrentEvent(() => "");
+        try {
+            await postDHIS2Resource({
+                data: {
+                    events: availableEvents.filter(
+                        (e) => e.event === currentEvent,
+                    ),
+                },
+                resource: "events",
+            });
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoading(() => false);
+            setCurrentEvent(() => "");
+        }
     };
     return (
         <Table

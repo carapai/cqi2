@@ -1,14 +1,53 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Workbook, Worksheet } from "exceljs";
-import { CellStyle, ColumnInfo, ExcelHeader } from "./interfaces";
+// excelGenerator.ts
+import {
+    ColumnInfo,
+    ExcelColumnOptions,
+    ExcelHeader,
+    GenerateExcelOptions,
+    StyleRule,
+} from "@/interfaces";
+import { Worksheet as ExcelJSWorksheet, Workbook } from "exceljs";
+
+import { convertToExcelStyle, DEFAULT_HEADER_STYLE } from "@/utils/utils";
+
+interface ExtendedWorksheet extends ExcelJSWorksheet {
+    styleRules?: StyleRule[];
+}
 
 export class ExcelGenerator {
     private workbook: Workbook;
-    private worksheet: Worksheet | null;
+    private worksheet: ExtendedWorksheet | null;
 
     constructor() {
         this.workbook = new Workbook();
         this.worksheet = null;
+    }
+
+    private getMaxHeaderDepth(
+        headers: ExcelHeader[],
+        currentDepth: number = 1,
+    ): number {
+        let maxDepth = currentDepth;
+        headers.forEach((header) => {
+            if (header.children && header.children.length > 0) {
+                const childDepth = this.getMaxHeaderDepth(
+                    header.children,
+                    currentDepth + 1,
+                );
+                maxDepth = Math.max(maxDepth, childDepth);
+            }
+        });
+        return maxDepth;
+    }
+
+    private calculateSpan(children: ExcelHeader[]): number {
+        return children.reduce((total, child) => {
+            if (child.children) {
+                return total + this.calculateSpan(child.children);
+            }
+            return total + (child.span || 1);
+        }, 0);
     }
 
     private createHeaderStructure(headers: ExcelHeader[]): ColumnInfo {
@@ -16,6 +55,7 @@ export class ExcelGenerator {
             totalColumns: 0,
             merges: [],
             columns: [],
+            maxDepth: this.getMaxHeaderDepth(headers),
         };
 
         const currentColumn = 1;
@@ -39,15 +79,21 @@ export class ExcelGenerator {
                 ? this.calculateSpan(header.children!)
                 : header.span || 1;
 
-            // Add merge if span is greater than 1 or if there are no children
-            if (span > 1 && !hasChildren) {
-                columnInfo.merges.push({
-                    start: { row, col: currentCol },
-                    end: { row, col: currentCol + span - 1 },
-                });
+            if (this.worksheet) {
+                const cell = this.worksheet.getCell(row, currentCol);
+                cell.value = header.title;
+
+                if (header.customStyle) {
+                    const excelStyle = convertToExcelStyle(header.customStyle);
+                    if (excelStyle) {
+                        Object.assign(cell, excelStyle);
+                    }
+                }
+                if (header.style) {
+                    Object.assign(cell, header.style);
+                }
             }
 
-            // Process children or add leaf column
             if (hasChildren) {
                 columnInfo.merges.push({
                     start: { row, col: currentCol },
@@ -62,10 +108,20 @@ export class ExcelGenerator {
                     level + 1,
                 );
             } else {
+                if (level < columnInfo.maxDepth) {
+                    columnInfo.merges.push({
+                        start: { row, col: currentCol },
+                        end: { row: columnInfo.maxDepth, col: currentCol },
+                    });
+                }
+
                 columnInfo.columns.push({
-                    header: header.title,
                     key: header.key || `col${currentCol}`,
                     width: header.width || 15,
+                    customStyle: header.customStyle,
+                    style: header.style,
+                    conditionalFormats: header.conditionalFormats,
+                    autoWidth: header.autoWidth,
                 });
             }
 
@@ -78,64 +134,167 @@ export class ExcelGenerator {
         });
     }
 
-    private calculateSpan(children: ExcelHeader[]): number {
-        return children.reduce((total, child) => {
-            if (child.children) {
-                return total + this.calculateSpan(child.children);
-            }
-            return total + (child.span || 1);
-        }, 0);
-    }
-
-    private styleHeaders(totalColumns: number): void {
+    private applyDefaultHeaderStyle(
+        totalColumns: number,
+        maxDepth: number,
+    ): void {
         if (!this.worksheet) return;
-        // Apply styles to header rows
 
-        const headerStyle: CellStyle = {
-            font: {
-                bold: true,
-                color: { argb: "000000" },
-            },
-            fill: {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: { argb: "FFE0E0E0" },
-            },
-            alignment: {
-                vertical: "middle",
-                horizontal: "center",
-            },
-            border: {
-                top: { style: "thin" },
-                left: { style: "thin" },
-                bottom: { style: "thin" },
-                right: { style: "thin" },
-            },
-        };
-
-        // Apply styles to header rows
-        for (let row = 1; row <= 2; row++) {
+        for (let row = 1; row <= maxDepth; row++) {
             for (let col = 1; col <= totalColumns; col++) {
                 const cell = this.worksheet.getCell(row, col);
-                Object.assign(cell, headerStyle);
+                if (!cell.style || Object.keys(cell.style).length === 0) {
+                    Object.assign(
+                        cell,
+                        convertToExcelStyle(DEFAULT_HEADER_STYLE),
+                    );
+                }
             }
         }
+    }
+
+    private applyConditionalFormatting(
+        column: ExcelColumnOptions,
+        startRow: number,
+        colIndex: number,
+    ): void {
+        if (!this.worksheet || !column.conditionalFormats) return;
+
+        const endRow = this.worksheet.rowCount;
+        const colLetter = this.worksheet.getColumn(colIndex + 1).letter;
+        const range = `${colLetter}${startRow}:${colLetter}${endRow}`;
+
+        console.log(range);
+
+        column.conditionalFormats.forEach((cf) => {
+            console.log(cf);
+
+            if (cf.type === "cellIs") {
+                if (
+                    cf.operator === "between" &&
+                    cf.minValue !== undefined &&
+                    cf.maxValue !== undefined
+                ) {
+                    this.worksheet!.addConditionalFormatting({
+                        ref: range,
+                        rules: [
+                            {
+                                type: "expression",
+                                priority: 1,
+                                formulae: [
+                                    `AND(${colLetter}${startRow}>=${cf.minValue},${colLetter}${endRow}<=${cf.maxValue})`,
+                                ],
+                                style: {
+                                    fill: {
+                                        type: "pattern",
+                                        pattern: "solid",
+                                        bgColor: {
+                                            argb:
+                                                cf.customStyle?.fill?.fgColor
+                                                    ?.argb || "FFFFFF00",
+                                        },
+                                    },
+                                },
+                            },
+                        ],
+                    });
+                } else if (cf.operator && cf.value !== undefined) {
+                    let operator: string;
+                    switch (cf.operator) {
+                        case "greaterThan":
+                            operator = ">";
+                            break;
+                        case "lessThan":
+                            operator = "<";
+                            break;
+                        case "equal":
+                            operator = "=";
+                            break;
+                        case "greaterThanOrEqual":
+                            operator = ">=";
+                            break;
+                        case "lessThanOrEqual":
+                            operator = "<=";
+                            break;
+                        default:
+                            operator = "=";
+                    }
+
+                    this.worksheet!.addConditionalFormatting({
+                        ref: range,
+                        rules: [
+                            {
+                                type: "expression",
+                                priority: 1,
+                                formulae: [
+                                    `${colLetter}1${operator}${cf.value}`,
+                                ],
+                                style: {
+                                    fill: {
+                                        type: "pattern",
+                                        pattern: "solid",
+                                        bgColor: {
+                                            argb:
+                                                cf.customStyle?.fill?.fgColor
+                                                    ?.argb || "FFFF0000",
+                                        },
+                                    },
+                                },
+                            },
+                        ],
+                    });
+                }
+            }
+        });
+    }
+
+    private autoFitColumns(): void {
+        if (!this.worksheet) return;
+
+        this.worksheet.columns.forEach((column: any, index) => {
+            if (column.autoWidth) {
+                let maxLength = 0;
+                const columnLetter = this.worksheet!.getColumn(
+                    index + 1,
+                ).letter;
+
+                const headerCell = this.worksheet!.getCell(`${columnLetter}1`);
+                maxLength = Math.max(
+                    maxLength,
+                    String(headerCell.value || "").length,
+                );
+
+                this.worksheet!.getColumn(index + 1).eachCell(
+                    { includeEmpty: false },
+                    (cell) => {
+                        const cellLength = String(cell.value || "").length;
+                        maxLength = Math.max(maxLength, cellLength);
+                    },
+                );
+
+                column.width = maxLength + 2;
+            }
+        });
     }
 
     public async generateExcel<T extends Record<string, any>>(
         headers: ExcelHeader[],
         data: T[],
-        sheetName: string = "Sheet1",
+        options: GenerateExcelOptions = {},
     ): Promise<Blob> {
-        this.worksheet = this.workbook.addWorksheet(sheetName);
+        const {
+            sheetName = "Sheet1",
+            styleRules,
+            autoFitColumns = false,
+        } = options;
 
-        // Create header structure
+        this.worksheet = this.workbook.addWorksheet(
+            sheetName,
+        ) as ExtendedWorksheet;
+        this.worksheet.styleRules = styleRules;
+
         const columnInfo = this.createHeaderStructure(headers);
 
-        // Set columns
-        this.worksheet.columns = columnInfo.columns;
-
-        // Apply merges
         columnInfo.merges.forEach((merge) => {
             this.worksheet?.mergeCells(
                 merge.start.row,
@@ -145,29 +304,58 @@ export class ExcelGenerator {
             );
         });
 
-        // Add data
         if (data && data.length > 0) {
-            this.worksheet.addRows(data);
+            const dataStartRow = columnInfo.maxDepth + 1;
+
+            data.forEach((row, rowIndex) => {
+                const currentRow = dataStartRow + rowIndex;
+                columnInfo.columns.forEach((col, colIndex) => {
+                    if (this.worksheet) {
+                        const cell = this.worksheet.getCell(
+                            currentRow,
+                            colIndex + 1,
+                        );
+                        cell.value = row[col.key];
+                    }
+                });
+            });
+
+            columnInfo.columns.forEach((column, index) => {
+                if (column.conditionalFormats) {
+                    this.applyConditionalFormatting(
+                        column,
+                        dataStartRow,
+                        index,
+                    );
+                }
+            });
         }
 
-        // Style headers
-        this.styleHeaders(columnInfo.totalColumns);
+        this.applyDefaultHeaderStyle(
+            columnInfo.totalColumns,
+            columnInfo.maxDepth,
+        );
 
-        // Generate blob
+        if (autoFitColumns) {
+            this.autoFitColumns();
+        }
+
         const buffer = await this.workbook.xlsx.writeBuffer();
         return new Blob([buffer], {
             type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
     }
 
-    // Helper method to download the generated Excel file
     public async downloadExcel<T extends Record<string, any>>(
         headers: ExcelHeader[],
         data: T[],
         filename: string = "download.xlsx",
-        sheetName: string = "Sheet1",
+        options: {
+            sheetName?: string;
+            styleRules?: StyleRule[];
+        } = {},
     ): Promise<void> {
-        const blob = await this.generateExcel(headers, data, sheetName);
+        const blob = await this.generateExcel(headers, data, options);
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;

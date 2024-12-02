@@ -4,6 +4,7 @@ import {
     DevApp,
     DisplayInstance,
     OrgUnit,
+    OU,
     Period,
     ProdApp,
     TrackedEntityInstance,
@@ -180,18 +181,18 @@ export const initialQueryOptions = queryOptions({
                 },
             });
 
-        const { headers, rows } = await getDHIS2Resource<{
-            headers: Array<Record<string, string>>;
-            rows: string[][];
-        }>({
-            resource: "events/query.json",
-            params: {
-                ouMode: "ALL",
-                programStage: "vPQxfsUQLEy",
-                includeAllDataElements: "true",
-                skipPaging: "true",
-            },
-        });
+        // const { headers, rows } = await getDHIS2Resource<{
+        //     headers: Array<Record<string, string>>;
+        //     rows: string[][];
+        // }>({
+        //     resource: "events/query.json",
+        //     params: {
+        //         ouMode: "ALL",
+        //         programStage: "vPQxfsUQLEy",
+        //         includeAllDataElements: "true",
+        //         skipPaging: "true",
+        //     },
+        // });
         const { organisationUnitLevels } = await getDHIS2Resource<{
             organisationUnitLevels: Array<{
                 id: string;
@@ -219,13 +220,14 @@ export const initialQueryOptions = queryOptions({
             const currentApps = await getDHIS2Resource<Array<DevApp>>({
                 resource: "apps",
             });
-
             apps = currentApps.map(
-                ({ baseUrl, name, launchUrl, icons: { "48": icon } }) => ({
-                    path: launchUrl,
-                    name,
-                    image: `${baseUrl}/${icon}`,
-                }),
+                ({ name, launchUrl, baseUrl, icons: { "48": icon } }) => {
+                    return {
+                        path: launchUrl,
+                        name,
+                        image: `${baseUrl}/${icon}`,
+                    };
+                },
             );
         } else {
             const { modules } = await getDHIS2Resource<{
@@ -234,11 +236,19 @@ export const initialQueryOptions = queryOptions({
                 resource: "dhis-web-commons/menu/getModules.action",
                 includeApi: false,
             });
-            apps = modules.map(({ defaultAction, displayName, icon }) => ({
-                name: displayName,
-                path: defaultAction,
-                image: icon,
-            }));
+            apps = modules.map(({ defaultAction, displayName, icon, name }) => {
+                let path = defaultAction;
+                let image = icon;
+                if (icon.startsWith("../")) {
+                    path = path.replace("../", "../../../");
+                    image = image.replace("../", "../../../");
+                }
+                return {
+                    name: displayName || name,
+                    path,
+                    image,
+                };
+            });
         }
 
         const { programs } = await getDHIS2Resource<{
@@ -262,10 +272,41 @@ export const initialQueryOptions = queryOptions({
         const viewUnits = dataViewOrganisationUnits.map(processDHIS2OrgUnit);
         await db.organisationUnits.bulkPut(units);
         await db.dataViewOrgUnits.bulkPut(viewUnits);
-        const indicators = rows.map((row: string[]) => {
-            return fromPairs(row.map((r, index) => [headers[index].name, r]));
+
+        const { headers, rows } = await getDHIS2Resource<{
+            headers: Array<Record<string, string>>;
+            rows: string[][];
+        }>({
+            resource: "events/query.json",
+            params: {
+                ouMode: "ALL",
+                programStage: "vPQxfsUQLEy",
+                includeAllDataElements: "true",
+                skipPaging: "true",
+            },
         });
 
+        const indicators: Array<Record<string, string>> = rows.map(
+            (row: string[]) => {
+                return fromPairs(
+                    row.map((r, index) => [headers[index].name, r]),
+                );
+            },
+        );
+        const indicatorsObject = indicators.reduce<
+            Record<string, Record<string, string>>
+        >((acc, indicator) => {
+            acc[indicator["event"]] = indicator;
+            return acc;
+        }, {});
+
+        const programAreas = options.reduce<Record<string, string>>(
+            (acc, option) => {
+                acc[option.code] = option.name;
+                return acc;
+            },
+            {},
+        );
         return {
             programs,
             ou: organisationUnits[0].id,
@@ -274,6 +315,8 @@ export const initialQueryOptions = queryOptions({
             organisationUnitLevels,
             indicators,
             apps,
+            indicatorsObject,
+            programAreas,
         };
     },
 });
@@ -720,25 +763,8 @@ export const programQueryOptions = (program: string) =>
                     paging: "false",
                 },
             });
-            const { headers, rows } = await getDHIS2Resource<{
-                headers: Array<Record<string, string>>;
-                rows: string[][];
-            }>({
-                resource: "events/query.json",
-                params: {
-                    ouMode: "ALL",
-                    programStage: "vPQxfsUQLEy",
-                    includeAllDataElements: "true",
-                    skipPaging: "true",
-                },
-            });
 
-            const indicators = rows.map((row: string[]) => {
-                return fromPairs(
-                    row.map((r, index) => [headers[index].name, r]),
-                );
-            });
-            return { program: currentProgram, indicators };
+            return { program: currentProgram };
         },
     });
 
@@ -748,15 +774,25 @@ export const trackedEntitiesQueryOptions = ({
     registration,
     page,
     pageSize,
+    ouMode,
 }: {
     program: string;
     registration: boolean;
     ou: string;
     page: number;
     pageSize: number;
+    ouMode: string;
 }) =>
     queryOptions({
-        queryKey: ["programs", program, ou, registration, page, pageSize],
+        queryKey: [
+            "programs",
+            program,
+            ou,
+            registration,
+            page,
+            pageSize,
+            ouMode,
+        ],
         queryFn: async () => {
             let results: { trackedEntities: DisplayInstance[]; total: number } =
                 {
@@ -771,18 +807,17 @@ export const trackedEntitiesQueryOptions = ({
                     page,
                     pageSize,
                     order: "updatedAt:desc",
+                    ouMode,
                 };
                 if (ou && isArray(ou) && ou.length > 0) {
                     params = {
                         ...params,
                         ou: ou[0],
-                        ouMode: "DESCENDANTS",
                     };
                 } else if (ou && !isArray(ou)) {
                     params = {
                         ...params,
                         ou,
-                        ouMode: "DESCENDANTS",
                     };
                 } else {
                     params = {
@@ -798,6 +833,30 @@ export const trackedEntitiesQueryOptions = ({
                     resource: "trackedEntityInstances",
                     params,
                 });
+
+                const allOrganizations = uniq(
+                    trackedEntityInstances.map(({ orgUnit }) => orgUnit),
+                );
+                const { organisationUnits } = await getDHIS2Resource<{
+                    organisationUnits: Array<OU>;
+                }>({
+                    resource: "organisationUnits.json",
+                    params: {
+                        filter: `id:in:[${allOrganizations.join(",")}]`,
+                        fields: "id,name,parent[id,name,parent[id,name,parent[id,name,parent[id,name]]]]",
+                    },
+                });
+
+                const facilities = fromPairs(
+                    organisationUnits.map(({ id, name, parent }) => {
+                        return [
+                            id,
+                            [name, ...convertParent([], parent)]
+                                .reverse()
+                                .join("/"),
+                        ];
+                    }),
+                );
 
                 const trackedEntities: Array<DisplayInstance> =
                     trackedEntityInstances.map(
@@ -821,6 +880,7 @@ export const trackedEntitiesQueryOptions = ({
                                 enrollments.length > 0
                                     ? enrollments[0].enrollment
                                     : "",
+                            path: facilities[rest.orgUnit],
                         }),
                     );
 

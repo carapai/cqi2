@@ -2,10 +2,16 @@ import type { DatePickerProps } from "antd";
 import dayjs, { ManipulateType } from "dayjs";
 import isoWeek from "dayjs/plugin/isoWeek";
 import quarterOfYear from "dayjs/plugin/quarterOfYear";
-
+import { Style as ExcelStyle } from "exceljs";
 import { ExcelGenerator } from "@/ExcelGenerator";
 import { Dictionary, isArray, sum, uniq } from "lodash";
-import { AnalyticsStructure, ExcelHeader, Option } from "../interfaces";
+import {
+    AnalyticsStructure,
+    ExcelHeader,
+    Option,
+    CellStyle,
+    Parent,
+} from "../interfaces";
 import { db } from "@/db";
 
 dayjs.extend(isoWeek);
@@ -231,18 +237,7 @@ export const relativePeriods2: { [key: string]: string[] } = {
     ),
 };
 
-export const convertParent = (
-    found: string[],
-    parent?: {
-        id: string;
-        name: string;
-        parent?: {
-            id: string;
-            name: string;
-            parent?: { id: string; name: string };
-        };
-    },
-): string[] => {
+export const convertParent = (found: string[], parent?: Parent): string[] => {
     if (parent) {
         found = [...found, parent.name];
         if (parent.parent) {
@@ -302,6 +297,42 @@ export const computerIndicator = (
     return { value: 0, numerator: "-", denominator: "-" };
 };
 
+export function convertToExcelStyle(
+    customStyle?: CellStyle,
+): Partial<ExcelStyle> | undefined {
+    if (!customStyle) return undefined;
+
+    return {
+        font: customStyle.font,
+        fill: customStyle.fill,
+        border: customStyle.border,
+        alignment: customStyle.alignment,
+        numFmt: customStyle.numFmt,
+    };
+}
+
+export const DEFAULT_HEADER_STYLE: CellStyle = {
+    font: {
+        bold: true,
+        color: { argb: "000000" },
+    },
+    fill: {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFE0E0E0" },
+    },
+    alignment: {
+        vertical: "middle",
+        horizontal: "center",
+    },
+    borders: {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+    },
+};
+
 export const downloadProjects = () => {};
 export const downloadIndicators = async ({
     structure,
@@ -319,18 +350,133 @@ export const downloadIndicators = async ({
         {
             title: "Indicator",
             key: "kToJ1rk0fwY",
+            autoWidth: true,
         },
         ...(filter === "ou"
-            ? structure.metaData.dimensions.pe.map((pe) => {
+            ? structure.metaData.dimensions.pe.map<ExcelHeader>((pe) => {
                   return {
                       title: structure.metaData.items[pe].name,
                       key: pe,
+                      autoWidth: true,
+                      children: [
+                          {
+                              title: "N",
+                              key: `${pe}_n`,
+                          },
+                          {
+                              title: "D",
+                              key: `${pe}_d`,
+                          },
+                          {
+                              title: "%",
+                              key: `${pe}_percent`,
+                              conditionalFormats: [
+                                  // Red for <= 50
+                                  {
+                                      type: "cellIs",
+                                      operator: "lessThanOrEqual",
+                                      value: 50,
+                                      customStyle: {
+                                          fill: {
+                                              type: "pattern",
+                                              pattern: "solid",
+                                              fgColor: { argb: "FFFF0000" }, // Red
+                                          },
+                                      },
+                                  },
+                                  // Yellow for 50-75
+                                  {
+                                      type: "cellIs",
+                                      operator: "between",
+                                      minValue: 51,
+                                      maxValue: 75,
+                                      customStyle: {
+                                          fill: {
+                                              type: "pattern",
+                                              pattern: "solid",
+                                              fgColor: { argb: "FFFFFF00" }, // Yellow
+                                          },
+                                      },
+                                  },
+                                  // Green for > 75
+                                  {
+                                      type: "cellIs",
+                                      operator: "greaterThan",
+                                      value: 75,
+                                      customStyle: {
+                                          fill: {
+                                              type: "pattern",
+                                              pattern: "solid",
+                                              fgColor: { argb: "FF00FF00" }, // Green
+                                          },
+                                      },
+                                  },
+                              ],
+                          },
+                      ],
                   };
               })
-            : structure.metaData.dimensions.ou.map((ou) => {
+            : structure.metaData.dimensions.ou.map<ExcelHeader>((ou) => {
                   return {
                       title: structure.metaData.items[ou].name,
                       key: ou,
+                      autoWidth: true,
+                      children: [
+                          {
+                              title: "N",
+                              key: `${ou}_n`,
+                          },
+                          {
+                              title: "D",
+                              key: `${ou}_d`,
+                          },
+                          {
+                              title: "%",
+                              key: `${ou}_percent`,
+                              conditionalFormats: [
+                                  // Red for <= 50
+                                  {
+                                      type: "cellIs",
+                                      operator: "lessThanOrEqual",
+                                      value: 50,
+                                      customStyle: {
+                                          fill: {
+                                              type: "pattern",
+                                              pattern: "solid",
+                                              fgColor: { argb: "FFFF0000" }, // Red
+                                          },
+                                      },
+                                  },
+                                  // Yellow for 50-75
+                                  {
+                                      type: "cellIs",
+                                      operator: "between",
+                                      minValue: 51,
+                                      maxValue: 75,
+                                      customStyle: {
+                                          fill: {
+                                              type: "pattern",
+                                              pattern: "solid",
+                                              fgColor: { argb: "FFFFFF00" }, // Yellow
+                                          },
+                                      },
+                                  },
+                                  // Green for > 75
+                                  {
+                                      type: "cellIs",
+                                      operator: "greaterThan",
+                                      value: 75,
+                                      customStyle: {
+                                          fill: {
+                                              type: "pattern",
+                                              pattern: "solid",
+                                              fgColor: { argb: "FF00FF00" }, // Green
+                                          },
+                                      },
+                                  },
+                              ],
+                          },
+                      ],
                   };
               })),
     ];
@@ -347,13 +493,12 @@ export const downloadIndicators = async ({
                           d.periods.includes(pe)
                       );
                   });
-                  if (available.length > 0) {
-                      acc[pe] = new Intl.NumberFormat("en-US", {
-                          style: "percent",
-                      }).format(computerIndicator(available).value);
-                  } else {
-                      acc[pe] = "-";
-                  }
+                  const { value, numerator, denominator } =
+                      computerIndicator(available);
+
+                  acc[`${pe}_percent`] = value * 100;
+                  acc[`${pe}_n`] = numerator;
+                  acc[`${pe}_d`] = denominator;
                   return acc;
               }, {})
             : structure.metaData.dimensions.ou.reduce<
@@ -366,13 +511,13 @@ export const downloadIndicators = async ({
                           d.path.includes(ou)
                       );
                   });
-                  if (available.length > 0) {
-                      acc[ou] = new Intl.NumberFormat("en-US", {
-                          style: "percent",
-                      }).format(computerIndicator(available).value);
-                  } else {
-                      acc[ou] = "-";
-                  }
+
+                  const { value, numerator, denominator } =
+                      computerIndicator(available);
+
+                  acc[`${ou}_percent`] = value * 100;
+                  acc[`${ou}_n`] = numerator;
+                  acc[`${ou}_d`] = denominator;
                   return acc;
               }, {})),
     }));
@@ -380,7 +525,9 @@ export const downloadIndicators = async ({
     const generator = new ExcelGenerator();
 
     try {
-        await generator.downloadExcel(headers, data, "report.xlsx", "Report");
+        await generator.downloadExcel(headers, data, "report.xlsx", {
+            sheetName: "Indicators",
+        });
     } catch (error) {
         console.error("Error generating Excel file:", error);
     }
@@ -435,7 +582,9 @@ export const downloadLayered = async ({
     const generator = new ExcelGenerator();
 
     try {
-        await generator.downloadExcel(headers, data, "report.xlsx", "Report");
+        await generator.downloadExcel(headers, data, "report.xlsx", {
+            sheetName: "Layered",
+        });
     } catch (error) {
         console.error("Error generating Excel file:", error);
     }
@@ -597,7 +746,9 @@ export const downloadAdminDashboard = async ({
     const generator = new ExcelGenerator();
 
     try {
-        await generator.downloadExcel(headers, data, "report.xlsx", "Report");
+        await generator.downloadExcel(headers, data, "report.xlsx", {
+            sheetName: "Admin",
+        });
     } catch (error) {
         console.error("Error generating Excel file:", error);
     }

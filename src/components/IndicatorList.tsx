@@ -1,7 +1,6 @@
 import { AnalyticsStructure } from "@/interfaces";
 import { rawDataQueryOptions } from "@/queryOptions";
 import { computerIndicator } from "@/utils/utils";
-// import { computerIndicator } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useLoaderData, useSearch } from "@tanstack/react-router";
 import type { TableProps } from "antd";
@@ -121,44 +120,6 @@ export default function IndicatorList({
                           },
                       },
                   ],
-                  //   key: pe,
-                  //   render: (_: string, row: Record<string, string>) => {
-                  //       const filtered = data.filter((d) => {
-                  //           return (
-                  //               d.kHRn35W3Gq4 === row.event &&
-                  //               isArray(d.periods) &&
-                  //               d.periods.includes(pe)
-                  //           );
-                  //       });
-                  //       const indicator = computerIndicator(filtered);
-                  //       return Intl.NumberFormat("en-US", {
-                  //           style: "percent",
-                  //       }).format(indicator);
-                  //   },
-
-                  //   onCell: (row: Record<string, string>) => {
-                  //       const filtered = data.filter((d) => {
-                  //           return (
-                  //               d.kHRn35W3Gq4 === row.event &&
-                  //               isArray(d.periods) &&
-                  //               d.periods.includes(pe)
-                  //           );
-                  //       });
-                  //       const value = 100 * computerIndicator(filtered);
-                  //       let color = "red";
-
-                  //       if (value >= 50) {
-                  //           color = "yellow";
-                  //       }
-
-                  //       if (value >= 75) {
-                  //           color = "green";
-                  //       }
-
-                  //       return {
-                  //           ["style"]: { background: color },
-                  //       };
-                  //   },
               }))
             : structure.metaData.dimensions.ou.map((ou) => ({
                   title: structure.metaData.items[ou].name,
@@ -167,53 +128,79 @@ export default function IndicatorList({
                       {
                           title: "N",
                           key: "n",
+
+                          render: (_: string, row: Record<string, string>) => {
+                              const filtered = data.filter((d) => {
+                                  return (
+                                      d.kHRn35W3Gq4 === row.event &&
+                                      isArray(d.path) &&
+                                      d.path.includes(ou)
+                                  );
+                              });
+                              const { numerator } = computerIndicator(filtered);
+                              return numerator;
+                          },
                       },
                       {
                           title: "D",
                           key: "d",
+                          render: (_: string, row: Record<string, string>) => {
+                              const filtered = data.filter((d) => {
+                                  return (
+                                      d.kHRn35W3Gq4 === row.event &&
+                                      isArray(d.path) &&
+                                      d.path.includes(ou)
+                                  );
+                              });
+                              const { denominator } =
+                                  computerIndicator(filtered);
+                              return denominator;
+                          },
                       },
                       {
                           title: "%",
                           key: "percent",
+
+                          render: (_: string, row: Record<string, string>) => {
+                              const filtered = data.filter((d) => {
+                                  return (
+                                      d.kHRn35W3Gq4 === row.event &&
+                                      isArray(d.path) &&
+                                      d.path.includes(ou)
+                                  );
+                              });
+                              const { value } = computerIndicator(filtered);
+                              return Intl.NumberFormat("en-US", {
+                                  style: "percent",
+                              }).format(value);
+                          },
+
+                          onCell: (row: Record<string, string>) => {
+                              const filtered = data.filter((d) => {
+                                  return (
+                                      d.kHRn35W3Gq4 === row.event &&
+                                      isArray(d.path) &&
+                                      d.path.includes(ou)
+                                  );
+                              });
+                              const value =
+                                  100 * computerIndicator(filtered).value;
+                              let color = "red";
+
+                              if (value >= 50) {
+                                  color = "yellow";
+                              }
+
+                              if (value >= 75) {
+                                  color = "green";
+                              }
+
+                              return {
+                                  ["style"]: { background: color },
+                              };
+                          },
                       },
                   ],
-                  //   render: (_: string, row: Record<string, string>) => {
-                  //       const filtered = data.filter((d) => {
-                  //           return (
-                  //               d.kHRn35W3Gq4 === row.event &&
-                  //               isArray(d.path) &&
-                  //               d.path.includes(ou)
-                  //           );
-                  //       });
-                  //       const indicator = computerIndicator(filtered);
-                  //       return Intl.NumberFormat("en-US", {
-                  //           style: "percent",
-                  //       }).format(indicator);
-                  //   },
-
-                  //   onCell: (row: Record<string, string>) => {
-                  //       const filtered = data.filter((d) => {
-                  //           return (
-                  //               d.kHRn35W3Gq4 === row.event &&
-                  //               isArray(d.path) &&
-                  //               d.path.includes(ou)
-                  //           );
-                  //       });
-                  //       const value = 100 * computerIndicator(filtered);
-                  //       let color = "red";
-
-                  //       if (value >= 50) {
-                  //           color = "yellow";
-                  //       }
-
-                  //       if (value >= 75) {
-                  //           color = "green";
-                  //       }
-
-                  //       return {
-                  //           ["style"]: { background: color },
-                  //       };
-                  //   },
               }))),
     ];
 

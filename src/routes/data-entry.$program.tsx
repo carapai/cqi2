@@ -27,7 +27,7 @@ function DataEntryProgramComponent() {
     const navigate = useNavigate({ from: Route.fullPath });
     const { program } = useParams({ from: Route.fullPath });
     const { programs } = useLoaderData({ from: "__root__" });
-    const { ou, disabled } = useSearch({ from: Route.fullPath });
+    const { ou, disabled, ouMode } = useSearch({ from: Route.fullPath });
     useSuspenseQuery(programQueryOptions(program));
     return (
         <Stack spacing="5px">
@@ -35,7 +35,6 @@ function DataEntryProgramComponent() {
                 direction="row"
                 width="100%"
                 bgColor="white"
-                // borderRadius="md"
                 boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
                 p="10px"
             >
@@ -95,6 +94,42 @@ function DataEntryProgramComponent() {
                                     trackedEntityType: a.trackedEntityType?.id,
                                 };
                             })}
+                            allowClear
+                        />
+                    </Box>
+                </Stack>
+
+                <Stack direction="row" flex={1} alignItems="center">
+                    <Text>Organization Mode</Text>
+                    <Box flex={1}>
+                        <Select
+                            value={ouMode}
+                            disabled={disabled}
+                            style={{
+                                width: "100%",
+                                borderRadius: "8px",
+                                borderColor: "#cbd5e0",
+                            }}
+                            onChange={(value) => {
+                                navigate({
+                                    search: (s) => ({
+                                        ...s,
+                                        ouMode: value,
+                                        page: 1,
+                                        pageSize: 10,
+                                    }),
+                                });
+                            }}
+                            options={[
+                                {
+                                    label: "Selected",
+                                    value: "SELECTED",
+                                },
+                                {
+                                    label: "Descendants",
+                                    value: "DESCENDANTS",
+                                },
+                            ]}
                             allowClear
                         />
                     </Box>

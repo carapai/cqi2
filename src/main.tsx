@@ -1,18 +1,18 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ChakraProvider } from "@chakra-ui/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import {
-    RouterProvider,
-    createHashHistory,
-    ErrorComponent,
-    createRouter,
+	ErrorComponent,
+	RouterProvider,
+	createHashHistory,
+	createRouter,
 } from "@tanstack/react-router";
 import { ConfigProvider } from "antd";
 
 import ReactDOM from "react-dom/client";
+import { Loading } from "./components/Loading";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
-import { Loading } from "./components/Loading";
 
 const queryClient = new QueryClient({
     defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 0 } },

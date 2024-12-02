@@ -108,6 +108,12 @@ function DashboardComponent() {
                                     borderRadius: "8px",
                                     borderColor: "#cbd5e0",
                                 }}
+                                showSearch
+                                filterOption={(input, option) =>
+                                    (option?.label ?? "")
+                                        .toLowerCase()
+                                        .includes(input.toLowerCase())
+                                }
                                 onChange={(value) => {
                                     const foundIndicators = findIndicators(
                                         indicators,
@@ -156,6 +162,12 @@ function DashboardComponent() {
                         <Box flex={1}>
                             <Select
                                 value={ind}
+                                showSearch
+                                filterOption={(input, option) =>
+                                    (option?.label ?? "")
+                                        .toLowerCase()
+                                        .includes(input.toLowerCase())
+                                }
                                 style={{
                                     width: "100%",
                                     borderRadius: "8px",

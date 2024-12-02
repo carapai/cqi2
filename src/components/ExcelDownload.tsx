@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ExcelGenerator } from "@/ExcelGenerator";
+// import { ExcelGenerator } from "@/ExcelGenerator";
 import { ExcelHeader } from "@/interfaces";
 
-interface ExcelDownloadButtonProps<T> {
+export interface ExcelDownloadButtonProps<T> {
     headers: ExcelHeader[];
     data: T[];
     filename?: string;
@@ -10,25 +9,25 @@ interface ExcelDownloadButtonProps<T> {
     className?: string;
 }
 
-export const ExcelDownloadButton = <T extends Record<string, any>>({
-    headers,
-    data,
-    filename = "download.xlsx",
-    sheetName = "Sheet1",
-    className = "",
-}: ExcelDownloadButtonProps<T>) => {
-    const handleDownload = async () => {
-        const generator = new ExcelGenerator();
-        try {
-            await generator.downloadExcel(headers, data, filename, sheetName);
-        } catch (error) {
-            console.error("Error downloading Excel:", error);
-        }
-    };
+// export const ExcelDownloadButton = <T extends Record<string, any>>({
+//     headers,
+//     data,
+//     filename = "download.xlsx",
+//     sheetName = "Sheet1",
+//     className = "",
+// }: ExcelDownloadButtonProps<T>) => {
+//     const handleDownload = async () => {
+//         const generator = new ExcelGenerator();
+//         // try {
+//         //     await generator.downloadExcel(headers, data, filename, sheetName);
+//         // } catch (error) {
+//         //     console.error("Error downloading Excel:", error);
+//         // }
+//     };
 
-    return (
-        <button onClick={handleDownload} className={className}>
-            Download Excel
-        </button>
-    );
-};
+//     return (
+//         <button onClick={handleDownload} className={className}>
+//             Download Excel
+//         </button>
+//     );
+// };

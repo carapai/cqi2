@@ -74,11 +74,11 @@ const RegistrationForm: React.FC<{
     const [currentInstance, setCurrentInstance] = React.useState<
         DisplayInstance | undefined
     >(displayInstance);
-    const { indicators } = useLoaderData({ from: "/data-entry/$program" });
+    const { indicators } = useLoaderData({ from: "__root__" });
     const { entity, program } = useParams({
         from: "/data-entry/$program/tracked-entities_/$entity/form",
     });
-    const { editing, registration, type, ou } = useSearch({
+    const { editing, registration, type, owner } = useSearch({
         from: "/data-entry/$program/tracked-entities_/$entity/form",
     });
     const navigate = useNavigate({
@@ -138,7 +138,7 @@ const RegistrationForm: React.FC<{
                         enrollments: [
                             {
                                 enrollment: generateUid(),
-                                orgUnit: ou,
+                                orgUnit: owner,
                                 program,
                                 trackedEntityInstance: entity,
                                 enrollmentDate: new Date().toISOString(),
@@ -147,7 +147,7 @@ const RegistrationForm: React.FC<{
                             },
                         ],
                         trackedEntityInstance: entity,
-                        orgUnit: ou,
+                        orgUnit: owner,
                     };
                     try {
                         await postDHIS2Resource({

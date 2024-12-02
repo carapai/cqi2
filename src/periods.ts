@@ -132,6 +132,6 @@ function getFinancialOct(date: Date): string {
 }
 
 // Example usage
-const date = new Date("2023-05-15");
-const periods = generateDHIS2Periods(date);
-console.log(periods);
+// const date = new Date("2023-05-15");
+// const periods = generateDHIS2Periods(date);
+// console.log(periods);

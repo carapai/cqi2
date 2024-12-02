@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { initialQueryOptions } from "@/queryOptions";
-import { Box, Spacer, Stack, Text } from "@chakra-ui/react";
+import { Box, Input, Spacer, Stack, Text } from "@chakra-ui/react";
 
 import { QueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import {
@@ -8,12 +9,7 @@ import {
     createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { Button, Image } from "antd";
-
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export const Route = createRootRouteWithContext<{
     queryClient: QueryClient;
@@ -28,10 +24,31 @@ function RootComponent() {
     const {
         data: { ou, viewUnits, options, indicators, apps },
     } = useSuspenseQuery(initialQueryOptions);
+    const [availableApps, setAvailableApps] = useState<
+        Array<{
+            name: string;
+            image: string;
+            path: string;
+        }>
+    >(apps);
 
+    const [search, setSearch] = useState<string>("");
+
+    const [isOpen, setIsOpen] = useState(false);
     const pa = options?.[0].code;
     const ind = indicators.find((i) => i["kuVtv8R9n8q"] === pa)?.["event"];
     const userInitials = "AM";
+
+    const containerEl = useRef<HTMLDivElement>(null);
+    const onDocClick = useCallback((evt: any) => {
+        if (containerEl.current && !containerEl.current.contains(evt.target)) {
+            setIsOpen(() => false);
+        }
+    }, []);
+    useEffect(() => {
+        document.addEventListener("click", onDocClick);
+        return () => document.removeEventListener("click", onDocClick);
+    }, [onDocClick]);
 
     return (
         <Stack w="100vw" h="100vh" bgColor="white">
@@ -53,7 +70,12 @@ function RootComponent() {
                 </Text>
                 <Spacer />
 
-                <Stack direction="row" spacing={8} alignItems="center">
+                <Stack
+                    direction="row"
+                    spacing={8}
+                    alignItems="center"
+                    ref={containerEl}
+                >
                     <Image
                         src="interpretations.png"
                         width="20px"
@@ -64,16 +86,48 @@ function RootComponent() {
                         width="20px"
                         alt="Messages Icon"
                     />
-                    <Popover>
-                        <PopoverTrigger>
-                            <Image
-                                src="appmenu.png"
-                                width="20px"
-                                alt="App Menu Icon"
-                                preview={false}
+
+                    <Stack position="relative">
+                        <Image
+                            src="appmenu.png"
+                            width="20px"
+                            alt="App Menu Icon"
+                            preview={false}
+                            onClick={() => setIsOpen(!isOpen)}
+                        />
+                    </Stack>
+
+                    {isOpen && (
+                        <Stack
+                            position="absolute"
+                            top="48px"
+                            zIndex={10000}
+                            backgroundColor="white"
+                            boxShadow="xl"
+                            w="300vw"
+                            minW="300px"
+                            maxW="560px"
+                            minH="200px"
+                            maxH="465px"
+                            right="48px"
+                            p="8px"
+                        >
+                            <Input
+                                color="black"
+                                value={search}
+                                onChange={(e) => {
+                                    setSearch(() => e.target.value);
+                                    setAvailableApps(() =>
+                                        apps.filter((a) =>
+                                            a.name
+                                                .toLowerCase()
+                                                .includes(
+                                                    e.target.value.toLowerCase(),
+                                                ),
+                                        ),
+                                    );
+                                }}
                             />
-                        </PopoverTrigger>
-                        <PopoverContent>
                             <Box
                                 display="flex"
                                 flexDirection="row"
@@ -81,34 +135,35 @@ function RootComponent() {
                                 alignContent="flex-start"
                                 alignItems="flex-start"
                                 justifyContent="flex-start"
-                                w="300vw"
-                                minW="300px"
-                                maxW="560px"
-                                minH="200px"
-                                maxH="465px"
-                                marginBlockStart={0}
-                                marginBlockEnd="8px"
-                                marginInline="8px"
                                 overflow="auto"
                                 overflowX="hidden"
                             >
-                                {apps.map(({ name, image, path }) => (
+                                {availableApps.map(({ name, image, path }) => (
                                     <Box
                                         as="a"
                                         display="flex"
                                         flexDirection="column"
                                         alignItems="center"
                                         justifyContent="center"
+                                        alignContent="center"
+                                        justifyItems="center"
                                         w="96px"
                                         m="8px"
                                         borderRadius="12px"
                                         textDecor="none"
                                         cursor="pointer"
                                         href={path}
+                                        key={name}
                                     >
                                         <Image
                                             src={image}
-                                            alt="Messages Icon"
+                                            alt=""
+                                            preview={false}
+                                            width="48px"
+                                            height="48px"
+                                            style={{
+                                                cursor: "pointer",
+                                            }}
                                         />
                                         <Text
                                             textAlign="center"
@@ -125,9 +180,8 @@ function RootComponent() {
                                     </Box>
                                 ))}
                             </Box>
-                        </PopoverContent>
-                    </Popover>
-
+                        </Stack>
+                    )}
                     <Stack
                         alignItems="center"
                         justifyContent="center"
@@ -188,6 +242,7 @@ function RootComponent() {
                             pageSize: 10,
                             page: 1,
                             type: "KSy4dEvpMWi",
+                            ouMode: "DESCENDANTS",
                         }}
                         params={{ program: "vMfIVFcRWlu" }}
                     >

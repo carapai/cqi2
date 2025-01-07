@@ -7,6 +7,7 @@ import { useSearch } from "@tanstack/react-router";
 import type { TableProps } from "antd";
 import { Button, Table } from "antd";
 import { isArray } from "lodash";
+import { Loading } from "@/components/Loading";
 export default function Layered({
     structure,
 }: {
@@ -18,7 +19,7 @@ export default function Layered({
     const { isLoading, data } = useQuery(
         rawDataQueryOptions({ level, ou, periods, pa, ind }),
     );
-    if (isLoading || !data) return <p>Loading...</p>;
+    if (isLoading || !data) return <Loading />;
 
     const columns: TableProps<{ ou: string }>["columns"] = [
         "ou",
@@ -53,7 +54,7 @@ export default function Layered({
 
                     return Intl.NumberFormat("en-US", {
                         style: "percent",
-                    }).format(indicator);
+                    }).format(indicator.value);
                 }
                 return "-";
             },
@@ -71,13 +72,16 @@ export default function Layered({
 
                 const indicator = computerIndicator(available);
                 let color = "";
-                if (available.length === 0 || isNaN(indicator)) {
+                if (available.length === 0 || isNaN(indicator.value)) {
                     color = "";
-                } else if (indicator * 100 <= 50) {
+                } else if (indicator.value * 100 <= 50) {
                     color = "red";
-                } else if (indicator * 100 > 50 && indicator * 100 < 75) {
+                } else if (
+                    indicator.value * 100 > 50 &&
+                    indicator.value * 100 < 75
+                ) {
                     color = "yellow";
-                } else if (indicator * 100 >= 75) {
+                } else if (indicator.value * 100 >= 75) {
                     color = "green";
                 }
                 return {

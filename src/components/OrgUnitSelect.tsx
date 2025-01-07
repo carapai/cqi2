@@ -5,6 +5,7 @@ import type { TreeSelectProps } from "antd";
 import { TreeSelect } from "antd";
 import { IndexableType, Table } from "dexie";
 import { useLiveQuery } from "dexie-react-hooks";
+import { orderBy } from "lodash";
 import { FC } from "react";
 
 const OrgUnitSelect: FC<{
@@ -35,7 +36,7 @@ const OrgUnitSelect: FC<{
             placeholder="Please select"
             onChange={onChange}
             loadData={onLoadData}
-            treeData={organisationUnits}
+            treeData={orderBy(organisationUnits, "title", "asc")}
             multiple={isMulti}
         />
     );

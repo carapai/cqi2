@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { TreeDataNode } from "antd";
 import { OptionBase } from "chakra-react-select";
+import { Style as ExcelStyle, IconSetTypes } from "exceljs";
 import { z } from "zod";
 
 export interface Option extends OptionBase {
@@ -209,16 +211,19 @@ export const DashboardQueryValidator = z.object({
     filter: z.enum(["period", "ou"]).optional(),
     counting: z.enum(["projects", "units"]).optional(),
     mode: z.enum(["multiple", "tags"]).optional(),
+    fetch: z.boolean().optional(),
 });
 
 export const DataEntryValidator = z.object({
     ou: z.string().optional(),
     disabled: z.boolean().optional(),
+    ouMode: z.string().optional(),
 });
 export const FormValidator = z.object({
     editing: z.boolean(),
     type: z.string().optional(),
     registration: z.boolean(),
+    owner: z.string(),
 });
 
 export const InstanceValidator = z.object({
@@ -234,6 +239,7 @@ export const TrackerValidator = z.object({
     page: z.number().optional(),
     type: z.string().optional(),
     registration: z.boolean(),
+    ouMode: z.string().optional(),
 });
 
 export type DashboardQuery = z.infer<typeof DashboardQueryValidator>;
@@ -261,11 +267,11 @@ export interface TrackedEntityInstance {
 }
 
 interface Attribute {
-    lastUpdated: string;
-    storedBy: string;
-    displayName: string;
-    created: string;
-    valueType: string;
+    lastUpdated?: string;
+    storedBy?: string;
+    displayName?: string;
+    created?: string;
+    valueType?: string;
     attribute: string;
     value: string;
 }
@@ -534,18 +540,141 @@ export interface SystemInfo {
     metadataSyncEnabled: boolean;
 }
 
-export interface HeaderChild {
+export interface DevApp {
+    version: string;
+    name: string;
+    appType: string;
+    appStorageSource: string;
+    folderName: string;
+    icons: Icons;
+    activities: Activities;
+    launchUrl: string;
+    baseUrl: string;
+    authorities: string[];
+    appState: string;
+    key: string;
+    bundled: boolean;
+    launch_path: string;
+    default_locale: string;
+    short_name: string;
+    core_app: boolean;
+}
+
+interface Activities {
+    dhis: Dhis;
+}
+
+interface Dhis {
+    href: string;
+}
+
+interface Icons {
+    "48": string;
+}
+
+export interface ProdApp {
+    name: string;
+    namespace: string;
+    defaultAction: string;
+    displayName: string;
+    icon: string;
+    description: string;
+}
+
+// interfaces.ts
+
+export interface Color {
+    argb: string;
+}
+
+export interface Font {
+    name?: string;
+    size?: number;
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+    color?: Color;
+}
+
+export interface Fill {
+    type: "pattern";
+    pattern: "solid" | "darkVertical" | "darkHorizontal" | "darkGrid";
+    fgColor?: Color;
+    bgColor?: Color;
+}
+
+export interface Border {
+    style: "thin" | "medium" | "thick" | "dotted" | "dashed";
+    color?: Color;
+}
+
+export interface Borders {
+    top?: Border;
+    left?: Border;
+    bottom?: Border;
+    right?: Border;
+}
+
+export interface Alignment {
+    vertical?: "top" | "middle" | "bottom";
+    horizontal?: "left" | "center" | "right";
+    wrapText?: boolean;
+}
+
+export interface CellStyle {
+    font?: Font;
+    fill?: Fill;
+    border?: Partial<Borders>;
+    borders?: Borders;
+    alignment?: Alignment;
+    numFmt?: string;
+}
+
+export interface ConditionalFormatting {
+    type: "dataBar" | "colorScale" | "iconSet" | "cellIs" | "containsText";
+    operator?:
+        | "greaterThan"
+        | "lessThan"
+        | "equal"
+        | "between"
+        | "greaterThanOrEqual"
+        | "lessThanOrEqual";
+    value?: number | string;
+    minValue?: number;
+    maxValue?: number;
+    customStyle?: CellStyle;
+    style?: Partial<ExcelStyle>;
+    format?: {
+        minimum?: { color: Color };
+        midpoint?: { color: Color };
+        maximum?: { color: Color };
+        icons?: IconSetTypes;
+        gradient?: boolean;
+        color?: Color;
+    };
+}
+
+export interface ExcelColumnOptions {
+    key: string;
+    width?: number;
+    header?: string | string[];
+    customStyle?: CellStyle;
+    style?: Partial<ExcelStyle>;
+    conditionalFormats?: ConditionalFormatting[];
+    autoWidth?: boolean;
+}
+
+export interface ExcelHeader {
     title: string;
     key?: string;
     width?: number;
     span?: number;
+    children?: ExcelHeader[];
+    customStyle?: CellStyle;
+    style?: Partial<ExcelStyle>;
+    conditionalFormats?: ConditionalFormatting[];
+    autoWidth?: boolean;
 }
-
-export interface HeaderParent extends HeaderChild {
-    children?: (HeaderParent | HeaderChild)[];
-}
-
-export type ExcelHeader = HeaderParent;
 
 export interface ColumnInfo {
     totalColumns: number;
@@ -553,31 +682,79 @@ export interface ColumnInfo {
         start: { row: number; col: number };
         end: { row: number; col: number };
     }>;
-    columns: Array<{
-        header: string;
-        key: string;
-        width: number;
-    }>;
+    columns: ExcelColumnOptions[];
+    maxDepth: number;
 }
 
-export interface CellStyle {
-    font?: {
-        bold?: boolean;
-        color?: { argb: string };
+export interface StyleRule {
+    type: "value" | "column" | "row" | "custom";
+    condition: any;
+    columns?: string[];
+    style: CellStyle | ((value: any, rowData: any) => CellStyle);
+}
+
+export interface GenerateExcelOptions {
+    sheetName?: string;
+    styleRules?: StyleRule[];
+    autoFitColumns?: boolean;
+}
+
+export type Parent = {
+    id: string;
+    name: string;
+    parent?: {
+        id: string;
+        name: string;
+        parent?: {
+            id: string;
+            name: string;
+            parent?: { id: string; name: string };
+        };
     };
-    fill?: {
-        type: "pattern";
-        pattern: "solid";
-        fgColor: { argb: string };
-    };
-    alignment?: {
-        vertical?: "middle" | "top" | "bottom";
-        horizontal?: "center" | "left" | "right";
-    };
-    border?: {
-        top?: { style: "thin" | "medium" | "thick" };
-        left?: { style: "thin" | "medium" | "thick" };
-        bottom?: { style: "thin" | "medium" | "thick" };
-        right?: { style: "thin" | "medium" | "thick" };
-    };
+};
+
+export type OU = {
+    id: string;
+    name: string;
+    parent?: Parent;
+};
+
+export interface SystemInfo {
+    contextPath: string;
+    userAgent: string;
+    calendar: string;
+    dateFormat: string;
+    serverDate: string;
+    serverTimeZoneId: string;
+    serverTimeZoneDisplayName: string;
+    lastAnalyticsTableSuccess: string;
+    intervalSinceLastAnalyticsTableSuccess: string;
+    lastAnalyticsTableRuntime: string;
+    databaseInfo: DatabaseInfo;
+    version: string;
+    revision: string;
+    buildTime: string;
+    jasperReportsVersion: string;
+    environmentVariable: string;
+    fileStoreProvider: string;
+    readOnlyMode: string;
+    nodeId: string;
+    javaVersion: string;
+    javaVendor: string;
+    javaOpts: string;
+    osName: string;
+    osArchitecture: string;
+    osVersion: string;
+    externalDirectory: string;
+    readReplicaCount: number;
+    memoryInfo: string;
+    cpuCores: number;
+    encryption: boolean;
+    emailConfigured: boolean;
+    redisEnabled: boolean;
+    systemId: string;
+    systemName: string;
+    instanceBaseUrl: string;
+    clusterHostname: string;
+    isMetadataVersionEnabled: boolean;
 }

@@ -1,7 +1,7 @@
 import { DatePicker, Input, Select } from "antd";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useCallback, useEffect, useState } from "react";
 
 const { Option } = Select;
 
@@ -18,28 +18,33 @@ const DateOfBirthComponent: React.FC<DateOfBirthComponentProps> = ({
     const [yearOfBirth, setYearOfBirth] = useState<string>("");
     const [monthOfBirth, setMonthOfBirth] = useState<string>("");
     const [dayOfBirth, setDayOfBirth] = useState<string>("");
-    const updateFields = (
-        date: Dayjs | null,
-        updateSource: "date" | "age" | "year" | "month" | "day",
-    ): void => {
-        if (date && date.isValid()) {
-            if (updateSource !== "date") onChange(date);
-            if (updateSource !== "age")
-                setAge(dayjs().diff(date, "year").toString());
-            if (updateSource !== "year") setYearOfBirth(date.year().toString());
-            if (updateSource !== "month")
-                setMonthOfBirth((date.month() + 1).toString());
-            if (updateSource !== "day") setDayOfBirth(date.date().toString());
-            onChange(date);
-        } else {
-            if (updateSource !== "date") onChange(null);
-            if (updateSource !== "age") setAge("");
-            if (updateSource !== "year") setYearOfBirth("");
-            if (updateSource !== "month") setMonthOfBirth("");
-            if (updateSource !== "day") setDayOfBirth("");
-            onChange(null);
-        }
-    };
+    const updateFields = useCallback(
+        (
+            date: Dayjs | null,
+            updateSource: "date" | "age" | "year" | "month" | "day",
+        ) => {
+            if (date && date.isValid()) {
+                if (updateSource !== "date") onChange(date);
+                if (updateSource !== "age")
+                    setAge(dayjs().diff(date, "year").toString());
+                if (updateSource !== "year")
+                    setYearOfBirth(date.year().toString());
+                if (updateSource !== "month")
+                    setMonthOfBirth((date.month() + 1).toString());
+                if (updateSource !== "day")
+                    setDayOfBirth(date.date().toString());
+                onChange(date);
+            } else {
+                if (updateSource !== "date") onChange(null);
+                if (updateSource !== "age") setAge("");
+                if (updateSource !== "year") setYearOfBirth("");
+                if (updateSource !== "month") setMonthOfBirth("");
+                if (updateSource !== "day") setDayOfBirth("");
+                onChange(null);
+            }
+        },
+        [onChange],
+    );
 
     const handleDateChange = (date: Dayjs | null): void => {
         updateFields(date, "date");
@@ -106,7 +111,7 @@ const DateOfBirthComponent: React.FC<DateOfBirthComponentProps> = ({
         // Initialize with current date
         const currentDate = dayjs();
         updateFields(currentDate, "date");
-    }, []);
+    }, [updateFields]);
 
     return (
         <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>

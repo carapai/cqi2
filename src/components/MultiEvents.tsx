@@ -1,20 +1,31 @@
+import { ReactECharts, ReactEChartsProps } from "@/components/LineGraph";
+import { deleteDHIS2Resource, postDHIS2Resource } from "@/dhis2";
 import { Event } from "@/interfaces";
 import { generateUid } from "@/utils/uid";
 import { reviewPeriodString } from "@/utils/utils";
-import { Spacer, Stack, Text } from "@chakra-ui/react";
+import { Box, Stack, Text } from "@chakra-ui/react";
 import { useLoaderData, useParams, useSearch } from "@tanstack/react-router";
 import type { TableProps } from "antd";
 import { Button, DatePicker, InputNumber, Table } from "antd";
 import dayjs from "dayjs";
 import { isEmpty } from "lodash";
 import { useState } from "react";
-import { ReactEChartsProps, ReactECharts } from "@/components/LineGraph";
+
+const numberFormatter = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 0,
+});
 
 export default function MultiEvents({
     events,
 }: {
     events?: Array<Partial<Event>>;
 }) {
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
+    const [currentEvent, setCurrentEvent] = useState<string>("");
+    const { indicatorsObject } = useLoaderData({
+        from: "__root__",
+    });
+
     const { attributesObject } = useLoaderData({
         from: "/data-entry/$program/tracked-entities_/$entity/",
     });
@@ -24,12 +35,23 @@ export default function MultiEvents({
     const { ou, stage } = useSearch({
         from: "/data-entry/$program/tracked-entities_/$entity/",
     });
-    const { WQcY6nfPouv } = attributesObject ?? {};
+    const { WQcY6nfPouv, kHRn35W3Gq4 } = attributesObject ?? {};
+
+    const { WI6Qp8gcZFX, krwzUepGwj7, kToJ1rk0fwY } =
+        indicatorsObject[kHRn35W3Gq4] ?? {};
     const [availableEvents, setAvailableEvents] = useState<
         Array<Partial<Event>>
     >(events ?? []);
 
     const option: ReactEChartsProps["option"] = {
+        title: {
+            text: kToJ1rk0fwY,
+            textStyle: {
+                fontSize: 12,
+                overflow: "truncate",
+                ellipsis: "...",
+            },
+        },
         xAxis: {
             type: "category",
             data: availableEvents.map(
@@ -38,6 +60,9 @@ export default function MultiEvents({
         },
         yAxis: {
             type: "value",
+            axisLabel: {
+                formatter: "{value}%",
+            },
         },
         series: [
             {
@@ -49,12 +74,14 @@ export default function MultiEvents({
                         ({ dataElement }) => dataElement === "RgNQcLejbwX",
                     );
                     if (
-                        numerator &&
-                        denominator &&
-                        numerator.value &&
-                        denominator.value
+                        numerator !== undefined &&
+                        denominator !== undefined &&
+                        numerator.value !== undefined &&
+                        denominator.value !== undefined &&
+                        numerator.value !== "" &&
+                        denominator.value !== "" &&
+                        denominator.value !== "0"
                     ) {
-                        console.log("Nothing");
                         return (
                             (Number(numerator.value) * 100) /
                             Number(denominator.value)
@@ -63,6 +90,13 @@ export default function MultiEvents({
                     return 0;
                 }),
                 type: "line",
+                label: {
+                    show: true,
+                    position: "top",
+                    formatter: function (d) {
+                        return `${numberFormatter.format(Number(d.value))}%`;
+                    },
+                },
             },
         ],
         grid: {
@@ -70,10 +104,11 @@ export default function MultiEvents({
             right: "40px",
             bottom: "40px",
             top: "40px",
+            containLabel: true,
         },
     };
 
-    const onChange = (
+    const onChange = async (
         dataElement: string,
         event: string | undefined,
         value: string | null,
@@ -134,8 +169,25 @@ export default function MultiEvents({
             },
         );
         setAvailableEvents(newEvents);
+
+        const updatedEvent = newEvents.find((e) => e.event === event);
+        if (updatedEvent) {
+            try {
+                await postDHIS2Resource({
+                    resource: "events",
+                    data: {
+                        events: [updatedEvent],
+                    },
+                });
+            } catch (error) {
+                console.log(error);
+            }
+        }
     };
-    const onDateChange = (event: string | undefined, value: string | null) => {
+    const onDateChange = async (
+        event: string | undefined,
+        value: string | null,
+    ) => {
         const newEvents: Array<Partial<Event>> = availableEvents.map(
             (currentEvent) => {
                 if (currentEvent.event === event) {
@@ -148,6 +200,36 @@ export default function MultiEvents({
             },
         );
         setAvailableEvents(newEvents);
+        const updatedEvent = newEvents.find((e) => e.event === event);
+        if (updatedEvent) {
+            try {
+                await postDHIS2Resource({
+                    resource: "events",
+                    data: {
+                        events: [updatedEvent],
+                    },
+                });
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    };
+
+    const onDelete = async (event: string) => {
+        setCurrentEvent(() => event);
+        setIsDeleting(() => true);
+        try {
+            await deleteDHIS2Resource({
+                resource: "events",
+                id: event,
+            });
+            setAvailableEvents((prev) => prev.filter((e) => e.event !== event));
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setIsDeleting(() => false);
+            setAvailableEvents((prev) => prev.filter((e) => e.event !== event));
+        }
     };
     const columns: TableProps<Record<string, string>>["columns"] = [
         {
@@ -159,79 +241,98 @@ export default function MultiEvents({
             fixed: "left",
             render: (text) => <a>{text}</a>,
         },
+        ...availableEvents.map(
+            ({ event = "", dataValues = [], eventDate = "" }) => {
+                const numerator = dataValues.find(
+                    ({ dataElement }) => dataElement === "rVZlkzOwWhi",
+                );
+                const denominator = dataValues.find(
+                    ({ dataElement }) => dataElement === "RgNQcLejbwX",
+                );
+                const currentDate = !isEmpty(eventDate)
+                    ? dayjs(eventDate)
+                    : null;
 
-        ...availableEvents.map((event) => {
-            const numerator = event.dataValues?.find(
-                ({ dataElement }) => dataElement === "rVZlkzOwWhi",
-            );
-            const denominator = event.dataValues?.find(
-                ({ dataElement }) => dataElement === "RgNQcLejbwX",
-            );
-            const currentDate = !isEmpty(event.eventDate)
-                ? dayjs(event.eventDate)
-                : null;
-
-            return {
-                title: (
-                    <DatePicker
-                        picker={reviewPeriodString(WQcY6nfPouv)}
-                        value={currentDate}
-                        onChange={(date) =>
-                            onDateChange(
-                                event.event,
-                                date?.format("YYYY-MM-DD"),
-                            )
+                return {
+                    title: (
+                        <DatePicker
+                            picker={reviewPeriodString(WQcY6nfPouv)}
+                            value={currentDate}
+                            onChange={(date) =>
+                                onDateChange(event, date?.format("YYYY-MM-DD"))
+                            }
+                        />
+                    ),
+                    key: "analytics",
+                    width: 175,
+                    minWidth: 175,
+                    render: (_: string, row: Record<string, string>) => {
+                        if (row.name === "Numerator") {
+                            return (
+                                <InputNumber
+                                    disabled={currentDate === null}
+                                    value={numerator?.value}
+                                    onChange={(value) =>
+                                        onChange("rVZlkzOwWhi", event, value)
+                                    }
+                                    style={{ textAlign: "center" }}
+                                />
+                            );
                         }
-                    />
-                ),
-                key: "analytics",
-                width: 175,
-                minWidth: 175,
-                render: (_: string, row: Record<string, string>) => {
-                    if (row.name === "Numerator") {
-                        return (
-                            <InputNumber
-                                value={numerator?.value}
-                                onChange={(value) =>
-                                    onChange("rVZlkzOwWhi", event.event, value)
-                                }
-                                style={{ textAlign: "center" }}
-                            />
-                        );
-                    }
-                    if (row.name === "Denominator") {
-                        return (
-                            <InputNumber
-                                value={denominator?.value}
-                                onChange={(value) =>
-                                    onChange("RgNQcLejbwX", event.event, value)
-                                }
-                                style={{ textAlign: "center" }}
-                            />
-                        );
-                    }
-                    if (
-                        numerator &&
-                        denominator &&
-                        numerator.value &&
-                        denominator.value
-                    ) {
-                        return (
-                            <Text>
-                                {Intl.NumberFormat("en-GB", {
-                                    notation: "standard",
-                                    style: "percent",
-                                }).format(
-                                    Number(numerator.value) /
-                                        Number(denominator.value),
-                                )}
-                            </Text>
-                        );
-                    }
-                    return "N/A";
-                },
-            };
-        }),
+                        if (row.name === "Denominator") {
+                            return (
+                                <InputNumber
+                                    disabled={currentDate === null}
+                                    value={denominator?.value}
+                                    onChange={(value) =>
+                                        onChange("RgNQcLejbwX", event, value)
+                                    }
+                                    style={{ textAlign: "center" }}
+                                />
+                            );
+                        }
+                        if (row.name === "Indicator") {
+                            if (
+                                numerator !== undefined &&
+                                denominator !== undefined &&
+                                numerator.value !== undefined &&
+                                denominator.value !== undefined &&
+                                numerator.value !== "" &&
+                                denominator.value !== "" &&
+                                String(denominator.value) !== "0"
+                            ) {
+                                return (
+                                    <Text>
+                                        {Intl.NumberFormat("en-GB", {
+                                            notation: "standard",
+                                            style: "percent",
+                                        }).format(
+                                            Number(numerator.value) /
+                                                Number(denominator.value),
+                                        )}
+                                    </Text>
+                                );
+                            }
+                            return "-";
+                        }
+                        if (row.name === "Action") {
+                            return (
+                                <Button
+                                    type="primary"
+                                    danger
+                                    loading={
+                                        isDeleting && event === currentEvent
+                                    }
+                                    onClick={() => onDelete(event)}
+                                >
+                                    Delete
+                                </Button>
+                            );
+                        }
+                    },
+                };
+            },
+        ),
     ];
 
     const data: Array<Record<string, string>> = [
@@ -246,6 +347,10 @@ export default function MultiEvents({
         {
             key: "4",
             name: "Indicator",
+        },
+        {
+            key: "5",
+            name: "Action",
         },
     ];
 
@@ -270,7 +375,7 @@ export default function MultiEvents({
     };
 
     return (
-        <Stack h="780px">
+        <Stack h="740px">
             <ReactECharts option={option} />
             <Table
                 columns={columns}
@@ -280,8 +385,17 @@ export default function MultiEvents({
                 size="small"
                 footer={() => (
                     <Stack direction="row" alignItems="center">
-                        <Spacer />
-                        <Button onClick={add}>Add Review</Button>
+                        <Stack flex={1} direction="row" alignItems="center">
+                            <Text fontWeight="bold">Numerator:</Text>
+                            <Text>{WI6Qp8gcZFX}</Text>
+                        </Stack>
+                        <Stack flex={1} direction="row" alignItems="center">
+                            <Text fontWeight="bold">Denominator:</Text>
+                            <Text>{krwzUepGwj7}</Text>
+                        </Stack>
+                        <Box>
+                            <Button onClick={add}>Add Review</Button>
+                        </Box>
                     </Stack>
                 )}
                 scroll={{ x: "max-content" }}

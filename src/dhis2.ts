@@ -57,7 +57,6 @@ export const deleteDHIS2Resource = async <T>({
     resource: string;
     includeApi?: boolean;
     id: string;
-    data: object;
 }) => {
     const actualResource = includeApi
         ? `api/${resource}/${id}`

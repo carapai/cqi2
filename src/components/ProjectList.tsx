@@ -1,9 +1,10 @@
 import { InstanceDisplay, Program } from "@/interfaces";
+import { downloadProjects } from "@/utils/utils";
 import { Spacer, Stack } from "@chakra-ui/react";
 import { useLoaderData, useNavigate, useSearch } from "@tanstack/react-router";
 import { Button, Table, TableProps, Tooltip } from "antd";
 import { range } from "lodash";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 const maxLength = 40;
 
@@ -23,19 +24,16 @@ export default function ProjectList({
         currentProgram: Partial<Program>;
     };
 }) {
+    const [loading, setLoading] = useState(false);
     const search = useSearch({ from: "/dashboards/$id" });
     const navigate = useNavigate({ from: "/dashboards/$id" });
     const { indicators, options } = useLoaderData({ from: "/dashboards" });
-    const processedIndicators = indicators
-        .filter((i) =>
-            processed
-                .map((a) => a.attributesObject?.["kHRn35W3Gq4"])
-                .includes(i.event),
-        )
-        .reduce<Record<string, Record<string, string>>>((acc, i) => {
-            acc[i.event] = i;
-            return acc;
-        }, {});
+    const processedIndicators = indicators.reduce<
+        Record<string, Record<string, string>>
+    >((acc, i) => {
+        acc[i.event] = i;
+        return acc;
+    }, {});
 
     const processedOptions = options.reduce<Record<string, string>>(
         (acc, i) => {
@@ -44,9 +42,6 @@ export default function ProjectList({
         },
         {},
     );
-
-    console.log(processedIndicators);
-
     const columns: TableProps<InstanceDisplay>["columns"] = useMemo(
         () =>
             currentProgram.programTrackedEntityAttributes?.flatMap(
@@ -60,11 +55,9 @@ export default function ProjectList({
                                     key: id,
                                     render: (_, row) => {
                                         const indicatorName =
-                                            processedIndicators[
-                                                row.attributesObject?.[
-                                                    "kHRn35W3Gq4"
-                                                ] ?? ""
-                                            ]?.["kToJ1rk0fwY"] ?? "";
+                                            row.attributesObject?.[
+                                                "kToJ1rk0fwY"
+                                            ] ?? "";
                                         return (
                                             <Tooltip title={indicatorName}>
                                                 <span>
@@ -82,11 +75,9 @@ export default function ProjectList({
                                     key: id,
                                     render: (_, row) => {
                                         const numName =
-                                            processedIndicators[
-                                                row.attributesObject?.[
-                                                    "kHRn35W3Gq4"
-                                                ] ?? ""
-                                            ]?.["WI6Qp8gcZFX"] ?? "";
+                                            row.attributesObject?.[
+                                                "WI6Qp8gcZFX"
+                                            ] ?? "";
                                         return (
                                             <Tooltip title={numName}>
                                                 <span>
@@ -102,11 +93,9 @@ export default function ProjectList({
                                     key: id,
                                     render: (_, row) => {
                                         const denName =
-                                            processedIndicators[
-                                                row.attributesObject?.[
-                                                    "kHRn35W3Gq4"
-                                                ] ?? ""
-                                            ]?.["krwzUepGwj7"] ?? "";
+                                            row.attributesObject?.[
+                                                "krwzUepGwj7"
+                                            ] ?? "";
                                         return (
                                             <Tooltip title={denName}>
                                                 <span>
@@ -123,28 +112,10 @@ export default function ProjectList({
                             ellipsis: true,
                             key: id,
                             render: (_, row) => {
-                                if (id === "kHRn35W3Gq4") {
-                                    const indicatorName =
-                                        processedIndicators[
-                                            row.attributesObject?.[
-                                                "kHRn35W3Gq4"
-                                            ] ?? ""
-                                        ]?.["kToJ1rk0fwY"] ?? "";
-                                    return (
-                                        <Tooltip title={indicatorName}>
-                                            <span>
-                                                {truncateText(indicatorName)}
-                                            </span>
-                                        </Tooltip>
-                                    );
-                                }
                                 if (id === "TG1QzFgGTex") {
                                     const programArea =
-                                        processedOptions[
-                                            row.attributesObject?.[
-                                                "TG1QzFgGTex"
-                                            ] ?? ""
-                                        ];
+                                        row.attributesObject?.["TG1QzFgGTex"] ??
+                                        "";
                                     return (
                                         <Tooltip title={programArea}>
                                             <span>
@@ -185,11 +156,7 @@ export default function ProjectList({
                     return [];
                 },
             ),
-        [
-            currentProgram.programTrackedEntityAttributes,
-            processedIndicators,
-            processedOptions,
-        ],
+        [currentProgram.programTrackedEntityAttributes],
     );
 
     const performanceColumns: TableProps<InstanceDisplay>["columns"] = useMemo(
@@ -198,6 +165,10 @@ export default function ProjectList({
                 title: `Period ${i + 1}`,
                 key: i,
                 children: [
+                    {
+                        title: "P",
+                        render: (_, row) => row.attributesObject?.[`${i}e`],
+                    },
                     {
                         title: "N",
                         render: (_, row) => row.attributesObject?.[`${i}n`],
@@ -210,6 +181,19 @@ export default function ProjectList({
             })),
         [],
     );
+
+    const download = async () => {
+        setLoading(() => true);
+        await downloadProjects({
+            programTrackedEntityAttributes:
+                currentProgram.programTrackedEntityAttributes ?? [],
+            search,
+            program: currentProgram.id ?? "",
+            processedIndicators,
+            processedOptions,
+        });
+        setLoading(() => false);
+    };
     return (
         <Stack>
             <Stack direction="row">
@@ -229,6 +213,8 @@ export default function ProjectList({
                     onMouseLeave={(e) =>
                         (e.currentTarget.style.backgroundColor = "#4CAF50")
                     }
+                    onClick={download}
+                    loading={loading}
                 >
                     Download Projects
                 </Button>

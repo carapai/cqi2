@@ -211,6 +211,7 @@ export const DashboardQueryValidator = z.object({
     filter: z.enum(["period", "ou"]).optional(),
     counting: z.enum(["projects", "units"]).optional(),
     mode: z.enum(["multiple", "tags"]).optional(),
+    fetch: z.boolean().optional(),
 });
 
 export const DataEntryValidator = z.object({
@@ -717,3 +718,43 @@ export type OU = {
     name: string;
     parent?: Parent;
 };
+
+export interface SystemInfo {
+    contextPath: string;
+    userAgent: string;
+    calendar: string;
+    dateFormat: string;
+    serverDate: string;
+    serverTimeZoneId: string;
+    serverTimeZoneDisplayName: string;
+    lastAnalyticsTableSuccess: string;
+    intervalSinceLastAnalyticsTableSuccess: string;
+    lastAnalyticsTableRuntime: string;
+    databaseInfo: DatabaseInfo;
+    version: string;
+    revision: string;
+    buildTime: string;
+    jasperReportsVersion: string;
+    environmentVariable: string;
+    fileStoreProvider: string;
+    readOnlyMode: string;
+    nodeId: string;
+    javaVersion: string;
+    javaVendor: string;
+    javaOpts: string;
+    osName: string;
+    osArchitecture: string;
+    osVersion: string;
+    externalDirectory: string;
+    readReplicaCount: number;
+    memoryInfo: string;
+    cpuCores: number;
+    encryption: boolean;
+    emailConfigured: boolean;
+    redisEnabled: boolean;
+    systemId: string;
+    systemName: string;
+    instanceBaseUrl: string;
+    clusterHostname: string;
+    isMetadataVersionEnabled: boolean;
+}

@@ -15,6 +15,7 @@ import {
     useSearch,
 } from "@tanstack/react-router";
 import { Button, Col, Row, Select } from "antd";
+import dayjs from "dayjs";
 import { isArray, isEmpty } from "lodash";
 import React, { useCallback, useMemo } from "react";
 
@@ -22,11 +23,15 @@ const FormElement = React.memo(
     ({
         attribute,
         displayInstance,
+        placeholder = "",
         onChange,
+        disabledDate,
     }: {
+        placeholder?: string;
         attribute: ProgramTrackedEntityAttribute["trackedEntityAttribute"];
         displayInstance: DisplayInstance | undefined;
         onChange: (value: string, dataElement: string) => void;
+        disabledDate?: (currentDate: dayjs.Dayjs) => boolean;
     }) => {
         const { optionSetValue, valueType, id, optionSet, multiple } =
             attribute;
@@ -38,7 +43,7 @@ const FormElement = React.memo(
                     style={{ width: "100%" }}
                     showSearch
                     allowClear
-                    placeholder="Select a person"
+                    placeholder={placeholder}
                     mode={multiple ? "multiple" : undefined}
                     value={multiple && val ? val.split(",") : val}
                     filterOption={(input, option) =>
@@ -60,6 +65,7 @@ const FormElement = React.memo(
                 value={(displayInstance?.attributesObject ?? {})[id]}
                 onChange={(value) => onChange(value, id)}
                 onBlur={() => {}}
+                disabledDate={disabledDate}
             />
         ) : null;
     },
@@ -236,6 +242,19 @@ const RegistrationForm: React.FC<{
                     },
                 }));
             }
+            if (dataElement === "TG1QzFgGTex") {
+                setCurrentInstance((prev) => {
+                    if (prev)
+                        return {
+                            ...prev,
+                            attributesObject: {
+                                ...prev.attributesObject,
+                                kHRn35W3Gq4: "",
+                            },
+                        };
+                    return prev;
+                });
+            }
         },
         [entity, displayInstance],
     );
@@ -250,6 +269,33 @@ const RegistrationForm: React.FC<{
                 {currentAttributes.map(({ trackedEntityAttribute }) => {
                     if (trackedEntityAttribute.id === "eZrfD4QnQfl")
                         return null;
+
+                    if (trackedEntityAttribute.id === "iInAQ40vDGZ") {
+                        return (
+                            <Col span={8} key={trackedEntityAttribute.id}>
+                                <Stack direction="column" width="100%">
+                                    <Text>
+                                        {`${trackedEntityAttribute.displayFormName || trackedEntityAttribute.name}`}
+                                    </Text>
+                                    <FormElement
+                                        attribute={trackedEntityAttribute}
+                                        displayInstance={currentInstance}
+                                        onChange={onChange}
+                                        disabledDate={(currentDate) =>
+                                            currentDate.isBefore(
+                                                dayjs(
+                                                    displayInstance
+                                                        ?.attributesObject?.[
+                                                        "y3hJLGjctPk"
+                                                    ],
+                                                ),
+                                            )
+                                        }
+                                    />
+                                </Stack>
+                            </Col>
+                        );
+                    }
                     if (trackedEntityAttribute.valueType === "TRUE_ONLY") {
                         return (
                             <Col span={8} key={trackedEntityAttribute.id}>

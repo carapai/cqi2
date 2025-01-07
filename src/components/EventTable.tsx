@@ -12,9 +12,11 @@ import { deleteDHIS2Resource, postDHIS2Resource } from "@/dhis2";
 export default function EventTable({
     events,
     programStageDataElements,
+    label,
 }: {
     events?: Array<Partial<Event>>;
     programStageDataElements: ProgramStageDataElement[];
+    label: string;
 }) {
     const [currentEvent, setCurrentEvent] = useState<string>("");
     const [isSaved, setIsSaved] = useState<boolean>(false);
@@ -111,6 +113,7 @@ export default function EventTable({
                                         onChange(currentEvent, id, value)
                                     }
                                     value={value?.value}
+									disabledDate={id === "kHRn35W3Gq4" ? (currentDate) => dayjs().isBefore(currentDate) : undefined}
                                 />
                             );
                         }
@@ -118,7 +121,10 @@ export default function EventTable({
                             valueType === "DATE" ||
                             (valueType === "DATETIME" && value?.value)
                         ) {
-                            return dayjs(value?.value).format("YYYY-MM-DD");
+                            if (value && value.value) {
+                                return dayjs(value.value).format("YYYY-MM-DD");
+                            }
+							return ""
                         }
                         return value?.value;
                     },
@@ -284,7 +290,7 @@ export default function EventTable({
             footer={() => (
                 <Stack direction="row" alignItems="center">
                     <Spacer />
-                    <Button onClick={() => add()}>Add Changes Worksheet</Button>
+                    <Button onClick={() => add()}>{label}</Button>
                 </Stack>
             )}
             scroll={{ x: "max-content" }}

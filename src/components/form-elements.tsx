@@ -6,6 +6,7 @@ type InputProps = {
     value: string | undefined;
     onChange: (value: string) => void;
     onBlur: (value: string) => void;
+    disabledDate?: (currentDate: dayjs.Dayjs) => boolean;
 };
 export const formElements: Record<string, (args: InputProps) => JSX.Element> = {
     TEXT: ({ onChange, value, onBlur }: InputProps) => (
@@ -65,7 +66,7 @@ export const formElements: Record<string, (args: InputProps) => JSX.Element> = {
             checked={value === "true"}
         />
     ),
-    DATE: ({ onChange, value, onBlur }: InputProps) => (
+    DATE: ({ onChange, value, onBlur, disabledDate }: InputProps) => (
         <DatePicker
             onChange={(e) => {
                 if (e) {
@@ -77,6 +78,7 @@ export const formElements: Record<string, (args: InputProps) => JSX.Element> = {
                 }
             }}
             value={value ? dayjs(value) : null}
+            disabledDate={disabledDate}
         />
     ),
     DATETIME: ({ onChange, value, onBlur }: InputProps) => (

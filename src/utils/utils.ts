@@ -4,15 +4,30 @@ import isoWeek from "dayjs/plugin/isoWeek";
 import quarterOfYear from "dayjs/plugin/quarterOfYear";
 import { Style as ExcelStyle } from "exceljs";
 import { ExcelGenerator } from "@/ExcelGenerator";
-import { Dictionary, isArray, sum, uniq } from "lodash";
+import {
+    Dictionary,
+    fromPairs,
+    isArray,
+    orderBy,
+    range,
+    sum,
+    uniq,
+} from "lodash";
 import {
     AnalyticsStructure,
     ExcelHeader,
     Option,
     CellStyle,
     Parent,
+    DisplayInstance,
+    ProgramTrackedEntityAttribute,
+    DashboardQuery,
+    TrackedEntityInstance,
+    TrackedEntityInstances,
+    InstanceDisplay,
 } from "../interfaces";
 import { db } from "@/db";
+import { getDHIS2Resource } from "@/dhis2";
 
 dayjs.extend(isoWeek);
 dayjs.extend(quarterOfYear);
@@ -30,6 +45,98 @@ export const createOptions2 = (
     return array.map((value, index) => {
         return { label: value, value: array2[index] };
     });
+};
+
+export const convertInstances = async (
+    trackedEntityInstances: TrackedEntityInstance[],
+    processedIndicators: Record<string, Record<string, string>>,
+    processedOptions: Record<string, string>,
+) => {
+    const allOrganizations = uniq(
+        trackedEntityInstances.map(({ orgUnit }) => orgUnit),
+    );
+    const { organisationUnits } = await getDHIS2Resource<{
+        organisationUnits: Array<{
+            id: string;
+            name: string;
+            parent?: Parent;
+        }>;
+    }>({
+        resource: "organisationUnits.json",
+        params: {
+            filter: `id:in:[${allOrganizations.join(",")}]`,
+            fields: "id,name,parent[id,name,parent[id,name,parent[id,name,parent[id,name]]]]",
+        },
+    });
+    const facilities = fromPairs(
+        organisationUnits.map(({ id, name, parent }) => {
+            return [
+                id,
+                [name, ...convertParent([], parent)].reverse().join("/"),
+            ];
+        }),
+    );
+
+    const processed: Array<InstanceDisplay> = trackedEntityInstances.map(
+        ({ attributes, enrollments, ...rest }) => {
+            const allEvents: Record<string, string> = {};
+            orderBy(
+                enrollments[0].events.filter(
+                    ({ programStage }) => programStage === "eB7oMPVRytu",
+                ),
+                "eventDate",
+                "asc",
+            ).forEach((e, index) => {
+                allEvents[`${index}e`] = dayjs(e.eventDate).format(
+                    "YYYY-MM-DD",
+                );
+                const numerator = e.dataValues.find(
+                    (dv) => dv.dataElement === "rVZlkzOwWhi",
+                );
+                const denominator = e.dataValues.find(
+                    (dv) => dv.dataElement === "RgNQcLejbwX",
+                );
+                if (numerator) {
+                    allEvents[`${index}n`] = numerator.value ?? "";
+                }
+                if (denominator) {
+                    allEvents[`${index}d`] = denominator.value ?? "";
+                }
+            });
+            const attributeValues: Record<string, string> = {};
+            attributes
+                .concat(
+                    enrollments.flatMap(({ attributes }) => attributes ?? []),
+                )
+                .forEach(({ value, attribute }) => {
+                    if (attribute === "kHRn35W3Gq4") {
+                        attributeValues["kToJ1rk0fwY"] =
+                            processedIndicators[value]?.["kToJ1rk0fwY"];
+                        attributeValues["WI6Qp8gcZFX"] =
+                            processedIndicators[value]?.["WI6Qp8gcZFX"];
+                        attributeValues["krwzUepGwj7"] =
+                            processedIndicators[value]?.["krwzUepGwj7"];
+                    } else if (attribute === "TG1QzFgGTex") {
+                        attributeValues[attribute] =
+                            processedOptions[value] ?? "";
+                    } else {
+                        attributeValues[attribute] = value;
+                    }
+                });
+            return {
+                ...rest,
+                attributesObject: {
+                    ...attributeValues,
+                    path: facilities[rest.orgUnit],
+                    ...allEvents,
+                },
+                attributes,
+                firstEnrollment:
+                    enrollments.length > 0 ? enrollments[0].enrollment : "",
+            };
+        },
+    );
+    return processed;
 };
 
 export const relativePeriods: { [key: string]: Option[] } = {
@@ -333,7 +440,148 @@ export const DEFAULT_HEADER_STYLE: CellStyle = {
     },
 };
 
-export const downloadProjects = () => {};
+export const downloadProjects = async ({
+    programTrackedEntityAttributes,
+    search,
+    program,
+    processedIndicators,
+    processedOptions,
+}: {
+    search: DashboardQuery;
+    program: string;
+    programTrackedEntityAttributes: ProgramTrackedEntityAttribute[];
+    processedIndicators: Record<string, Record<string, string>>;
+    processedOptions: Record<string, string>;
+}) => {
+    const { ou, pa, ind } = search;
+
+    let pas: string[] = [];
+    let indicators: string[] = [];
+
+    if (pa && isArray(pa) && pa.length > 0) {
+        pas = pa;
+    } else if (pa && !isArray(pa)) {
+        pas = [pa];
+    }
+
+    if (ind && isArray(ind) && ind.length > 0) {
+        indicators = ind;
+    } else if (ind && !isArray(ind)) {
+        indicators = [ind];
+    }
+
+    let params: Record<string, string | number> = {
+        fields: "*",
+        program,
+    };
+    if (ou && isArray(ou) && ou.length > 0) {
+        params = { ...params, ou: ou[0], ouMode: "DESCENDANTS" };
+    } else if (ou && !isArray(ou)) {
+        params = { ...params, ou, ouMode: "DESCENDANTS" };
+    } else {
+        params = {
+            ...params,
+            ouMode: "ALL",
+        };
+    }
+    if (indicators.length > 0) {
+        params = {
+            ...params,
+            filter: `kHRn35W3Gq4:IN:${indicators.join(";")}`,
+        };
+    } else if (pas.length > 0) {
+        params = {
+            ...params,
+            filter: `TG1QzFgGTex:IN:${pas.join(";")}`,
+        };
+    }
+
+    let page = 1;
+    let total = 1;
+
+    let instances: DisplayInstance[] = [];
+    while (total > 0) {
+        const { trackedEntityInstances } =
+            await getDHIS2Resource<TrackedEntityInstances>({
+                resource: "trackedEntityInstances",
+                params: { ...params, page },
+            });
+        const displayInstance = await convertInstances(
+            trackedEntityInstances,
+            processedIndicators,
+            processedOptions,
+        );
+        instances = instances.concat(displayInstance);
+        total = trackedEntityInstances.length;
+        page++;
+    }
+
+    const headers: ExcelHeader[] = programTrackedEntityAttributes
+        .flatMap((pea) => {
+            if (pea.trackedEntityAttribute.id === "kHRn35W3Gq4") {
+                return [
+                    {
+                        title: pea.trackedEntityAttribute.name,
+                        key: "kToJ1rk0fwY",
+                        autoWidth: true,
+                    },
+                    {
+                        title: "Numerator",
+                        key: "WI6Qp8gcZFX",
+                        autoWidth: true,
+                    },
+                    {
+                        title: "Denominator",
+                        key: "krwzUepGwj7",
+                        autoWidth: true,
+                    },
+                ];
+            }
+            return {
+                title: pea.trackedEntityAttribute.name,
+                key: pea.trackedEntityAttribute.id,
+                autoWidth: true,
+            };
+        })
+        .concat(
+            range(12).map((i) => ({
+                title: `Period ${i + 1}`,
+                autoWidth: true,
+                key: `Period ${i + 1}`,
+                children: [
+                    {
+                        title: "P",
+                        key: `${i}e`,
+                        autoWidth: true,
+                    },
+                    {
+                        title: "N",
+                        key: `${i}n`,
+                        autoWidth: true,
+                    },
+                    {
+                        title: "D",
+                        key: `${i}n`,
+                        autoWidth: true,
+                    },
+                ],
+            })),
+        );
+
+    const generator = new ExcelGenerator();
+
+    const finalData = instances.map((d) => {
+        return d.attributesObject ?? {};
+    });
+
+    try {
+        await generator.downloadExcel(headers, finalData, "projects.xlsx", {
+            sheetName: "Projects",
+        });
+    } catch (error) {
+        console.error("Error generating Excel file:", error);
+    }
+};
 export const downloadIndicators = async ({
     structure,
     filter,

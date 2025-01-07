@@ -81,10 +81,13 @@ function DataEntryProgramTrackedEntitiesEntityComponent() {
                     return [];
                 },
             );
+            const label =
+                stage === "g1Y2VEFKWOT" ? "Add Changes Worksheet" : "Add Summary of Observations";
             let children = (
                 <EventTable
                     events={events}
                     programStageDataElements={programStageDataElements}
+                    label={label}
                 />
             );
 

@@ -26,8 +26,11 @@ import { useEffect, useState } from "react";
 export const Route = createFileRoute("/dashboards")({
     component: DashboardComponent,
     validateSearch: DashboardQueryValidator,
-    loader: ({ context: { queryClient } }) =>
-        queryClient.ensureQueryData(dashboardsQueryOptions()),
+    loaderDeps: ({ search: { fetch } }) => ({
+        fetch,
+    }),
+    loader: ({ context: { queryClient }, deps: { fetch } }) =>
+        queryClient.ensureQueryData(dashboardsQueryOptions(fetch)),
     pendingComponent: () => <Loading />,
 });
 
@@ -51,14 +54,14 @@ const findIndicators = (
 };
 
 function DashboardComponent() {
-    const { pa, ind, level, ou, periods, mode } = useSearch({
+    const { pa, ind, level, ou, periods, mode, fetch } = useSearch({
         from: Route.fullPath,
     });
     const navigate = useNavigate({ from: Route.fullPath });
 
     const {
         data: { options, indicators, organisationUnitLevels },
-    } = useSuspenseQuery(dashboardsQueryOptions());
+    } = useSuspenseQuery(dashboardsQueryOptions(fetch));
 
     const [filteredIndicators, setFilteredIndicators] = useState<Array<Option>>(
         [],

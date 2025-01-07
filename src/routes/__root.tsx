@@ -1,15 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import AppsDropdown from "@/components/AppsDropdown";
+import { LinkButton } from "@/components/LinkButton";
+import { UserDropdown } from "@/components/UserDropdown";
 import { initialQueryOptions } from "@/queryOptions";
-import { Box, Input, Spacer, Stack, Text } from "@chakra-ui/react";
-
+import { Spacer, Stack, Text } from "@chakra-ui/react";
 import { QueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import {
-    Link,
-    Outlet,
-    createRootRouteWithContext,
-} from "@tanstack/react-router";
-import { Button, Image } from "antd";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+import { Image } from "antd";
 
 export const Route = createRootRouteWithContext<{
     queryClient: QueryClient;
@@ -22,33 +18,19 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
     const {
-        data: { ou, viewUnits, options, indicators, apps },
+        data: {
+            ou,
+            viewUnits,
+            options,
+            indicators,
+            apps,
+            systemName,
+            initialsString,
+        },
     } = useSuspenseQuery(initialQueryOptions);
-    const [availableApps, setAvailableApps] = useState<
-        Array<{
-            name: string;
-            image: string;
-            path: string;
-        }>
-    >(apps);
 
-    const [search, setSearch] = useState<string>("");
-
-    const [isOpen, setIsOpen] = useState(false);
     const pa = options?.[0].code;
     const ind = indicators.find((i) => i["kuVtv8R9n8q"] === pa)?.["event"];
-    const userInitials = "AM";
-
-    const containerEl = useRef<HTMLDivElement>(null);
-    const onDocClick = useCallback((evt: any) => {
-        if (containerEl.current && !containerEl.current.contains(evt.target)) {
-            setIsOpen(() => false);
-        }
-    }, []);
-    useEffect(() => {
-        document.addEventListener("click", onDocClick);
-        return () => document.removeEventListener("click", onDocClick);
-    }, [onDocClick]);
 
     return (
         <Stack w="100vw" h="100vh" bgColor="white">
@@ -64,137 +46,45 @@ function RootComponent() {
                 maxH="48px"
                 minH="48px"
             >
-                <Image src="dhis2whitelogo.png" width="30px" alt="DHIS2 Logo" />
-                <Text fontSize="sm" fontWeight="bold">
-                    Integrated CQI Database - Continuous Quality Improvement
-                </Text>
-                <Spacer />
-
                 <Stack
+                    as="a"
+                    href="../../.."
                     direction="row"
-                    spacing={8}
+                    spacing={2}
                     alignItems="center"
-                    ref={containerEl}
                 >
+                    <Image
+                        src="../../api/staticContent/logo_banner"
+                        height="40px"
+                        preview={false}
+                        alt="DHIS2 Logo"
+                    />
+                    <Text fontSize="sm" fontWeight="bold">
+                        {systemName} - Continuous Quality Improvement
+                    </Text>
+                </Stack>
+
+                <Spacer />
+                <Stack direction="row" spacing={8} alignItems="center">
                     <Image
                         src="interpretations.png"
                         width="20px"
                         alt="Interpretations Icon"
+                        preview={false}
                     />
                     <Image
                         src="messages.png"
                         width="20px"
                         alt="Messages Icon"
+                        preview={false}
                     />
 
-                    <Stack position="relative">
-                        <Image
-                            src="appmenu.png"
-                            width="20px"
-                            alt="App Menu Icon"
-                            preview={false}
-                            onClick={() => setIsOpen(!isOpen)}
-                        />
-                    </Stack>
-
-                    {isOpen && (
-                        <Stack
-                            position="absolute"
-                            top="48px"
-                            zIndex={10000}
-                            backgroundColor="white"
-                            boxShadow="xl"
-                            w="300vw"
-                            minW="300px"
-                            maxW="560px"
-                            minH="200px"
-                            maxH="465px"
-                            right="48px"
-                            p="8px"
-                        >
-                            <Input
-                                color="black"
-                                value={search}
-                                onChange={(e) => {
-                                    setSearch(() => e.target.value);
-                                    setAvailableApps(() =>
-                                        apps.filter((a) =>
-                                            a.name
-                                                .toLowerCase()
-                                                .includes(
-                                                    e.target.value.toLowerCase(),
-                                                ),
-                                        ),
-                                    );
-                                }}
-                            />
-                            <Box
-                                display="flex"
-                                flexDirection="row"
-                                flexWrap="wrap"
-                                alignContent="flex-start"
-                                alignItems="flex-start"
-                                justifyContent="flex-start"
-                                overflow="auto"
-                                overflowX="hidden"
-                            >
-                                {availableApps.map(({ name, image, path }) => (
-                                    <Box
-                                        as="a"
-                                        display="flex"
-                                        flexDirection="column"
-                                        alignItems="center"
-                                        justifyContent="center"
-                                        alignContent="center"
-                                        justifyItems="center"
-                                        w="96px"
-                                        m="8px"
-                                        borderRadius="12px"
-                                        textDecor="none"
-                                        cursor="pointer"
-                                        href={path}
-                                        key={name}
-                                    >
-                                        <Image
-                                            src={image}
-                                            alt=""
-                                            preview={false}
-                                            width="48px"
-                                            height="48px"
-                                            style={{
-                                                cursor: "pointer",
-                                            }}
-                                        />
-                                        <Text
-                                            textAlign="center"
-                                            overflowWrap="anywhere"
-                                            mt="14px"
-                                            color="rgba(0, 0, 0, 0.87)"
-                                            fontSize="12px"
-                                            letterSpacing="0.01em"
-                                            lineHeight="14px"
-                                            cursor="pointer"
-                                        >
-                                            {name}
-                                        </Text>
-                                    </Box>
-                                ))}
-                            </Box>
-                        </Stack>
-                    )}
-                    <Stack
-                        alignItems="center"
-                        justifyContent="center"
-                        bgColor="#1A202C"
-                        borderRadius="full"
-                        w="32px"
-                        h="32px"
-                        title="User"
-                    >
-                        <Text fontWeight="bold" color="white" fontSize="sm">
-                            {userInitials}
-                        </Text>
-                    </Stack>
+                    <AppsDropdown apps={apps} />
+                    <UserDropdown
+                        initials={initialsString}
+                        fullName="Administrator System"
+                        email="amutesasira@hispuganda.org"
+                    />
                 </Stack>
             </Stack>
 
@@ -220,22 +110,20 @@ function RootComponent() {
                 </Text>
                 <Spacer />
                 <Stack direction="row" spacing={4}>
-                    <Link to="/">
-                        <Button
-                            type="primary"
-                            shape="round"
-                            style={{
-                                backgroundColor: "#3182CE",
-                                borderColor: "#3182CE",
-                            }}
-                        >
-                            Home
-                        </Button>
-                    </Link>
-
-                    <Link
+                    <LinkButton
+                        to="/"
+                        shape="round"
+                        activeProps={{
+                            style: { background: "#1677ff", color: "white" },
+                        }}
+                    >
+                        Home
+                    </LinkButton>
+                    <LinkButton
                         to="/data-entry/$program/tracked-entities"
-                        activeProps={{ style: { background: "yellow" } }}
+                        activeProps={{
+                            style: { background: "#1677ff", color: "white" },
+                        }}
                         search={{
                             ou,
                             registration: true,
@@ -245,19 +133,17 @@ function RootComponent() {
                             ouMode: "DESCENDANTS",
                         }}
                         params={{ program: "vMfIVFcRWlu" }}
+                        shape="round"
                     >
-                        <Button
-                            shape="round"
-                            style={{ borderColor: "#2B6CB0", color: "#2B6CB0" }}
-                        >
-                            Data Entry
-                        </Button>
-                    </Link>
+                        Data Entry
+                    </LinkButton>
 
-                    <Link
+                    <LinkButton
                         to="/dashboards/$id"
                         params={{ id: "layered" }}
-                        activeProps={{ style: { background: "yellow" } }}
+                        activeProps={{
+                            style: { background: "#1677ff", color: "white" },
+                        }}
                         search={{
                             periods: [
                                 {
@@ -275,19 +161,17 @@ function RootComponent() {
                             pa,
                             ind,
                         }}
+                        shape="round"
                     >
-                        <Button
-                            shape="round"
-                            style={{ borderColor: "#2C5282", color: "#2C5282" }}
-                        >
-                            Layered Dashboard
-                        </Button>
-                    </Link>
+                        Layered Dashboard
+                    </LinkButton>
 
-                    <Link
+                    <LinkButton
                         to="/dashboards/$id"
                         params={{ id: "indicators" }}
-                        activeProps={{ style: { background: "yellow" } }}
+                        activeProps={{
+                            style: { background: "#1677ff", color: "white" },
+                        }}
                         search={{
                             periods: [
                                 {
@@ -305,16 +189,12 @@ function RootComponent() {
                             filter: "period",
                             mode: "multiple",
                         }}
+                        shape="round"
                     >
-                        <Button
-                            shape="round"
-                            style={{ borderColor: "#2C7A7B", color: "#2C7A7B" }}
-                        >
-                            All Indicators
-                        </Button>
-                    </Link>
+                        All Indicators
+                    </LinkButton>
 
-                    <Link
+                    <LinkButton
                         to="/dashboards/$id"
                         params={{ id: "projects" }}
                         search={{
@@ -323,17 +203,15 @@ function RootComponent() {
                             ou: viewUnits,
                             mode: "multiple",
                         }}
-                        activeProps={{ style: { background: "yellow" } }}
+                        activeProps={{
+                            style: { background: "#1677ff", color: "white" },
+                        }}
+                        shape="round"
                     >
-                        <Button
-                            shape="round"
-                            style={{ borderColor: "#2F855A", color: "#2F855A" }}
-                        >
-                            Projects
-                        </Button>
-                    </Link>
+                        Projects
+                    </LinkButton>
 
-                    <Link
+                    <LinkButton
                         to="/dashboards/$id"
                         params={{ id: "admin" }}
                         search={{
@@ -353,15 +231,18 @@ function RootComponent() {
                             counting: "projects",
                             mode: "multiple",
                         }}
-                        activeProps={{ style: { background: "yellow" } }}
+                        activeProps={{
+                            style: { background: "#1677ff", color: "white" },
+                        }}
+                        shape="round"
                     >
-                        <Button
+                        {/* <Button
                             shape="round"
                             style={{ borderColor: "#9B2C2C", color: "#9B2C2C" }}
-                        >
-                            Admin Dashboard
-                        </Button>
-                    </Link>
+                        > */}
+                        Admin Dashboard
+                        {/* </Button> */}
+                    </LinkButton>
                 </Stack>
             </Stack>
             <Outlet />

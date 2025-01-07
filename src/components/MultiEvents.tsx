@@ -11,6 +11,10 @@ import dayjs from "dayjs";
 import { isEmpty } from "lodash";
 import { useState } from "react";
 
+const numberFormatter = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 0,
+});
+
 export default function MultiEvents({
     events,
 }: {
@@ -86,6 +90,13 @@ export default function MultiEvents({
                     return 0;
                 }),
                 type: "line",
+                label: {
+                    show: true,
+                    position: "top",
+                    formatter: function (d) {
+                        return `${numberFormatter.format(Number(d.value))}%`;
+                    },
+                },
             },
         ],
         grid: {
@@ -93,6 +104,7 @@ export default function MultiEvents({
             right: "40px",
             bottom: "40px",
             top: "40px",
+            containLabel: true,
         },
     };
 
@@ -287,7 +299,7 @@ export default function MultiEvents({
                                 denominator.value !== undefined &&
                                 numerator.value !== "" &&
                                 denominator.value !== "" &&
-                                denominator.value !== "0"
+                                String(denominator.value) !== "0"
                             ) {
                                 return (
                                     <Text>
@@ -301,7 +313,7 @@ export default function MultiEvents({
                                     </Text>
                                 );
                             }
-                            return "N/A";
+                            return "-";
                         }
                         if (row.name === "Action") {
                             return (

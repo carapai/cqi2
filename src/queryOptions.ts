@@ -1,5 +1,7 @@
+import { db } from "@/db";
 import { getDHIS2Resource } from "@/dhis2";
 import {
+    AnalyticsStructure,
     DashboardQuery,
     DevApp,
     DisplayInstance,
@@ -7,21 +9,21 @@ import {
     OU,
     Period,
     ProdApp,
+    Program,
+    SystemInfo,
     TrackedEntityInstance,
     TrackedEntityInstances,
 } from "@/interfaces";
-import { queryOptions } from "@tanstack/react-query";
-import { IndexableType, Table } from "dexie";
-import { fromPairs, isArray, orderBy, uniq } from "lodash";
-import { db } from "@/db";
-import { AnalyticsStructure, InstanceDisplay, Program } from "@/interfaces";
-import { convertParent } from "@/utils/utils";
 import { generateUid } from "@/utils/uid";
-import { generateDHIS2Periods } from "./periods";
+import { convertInstances, convertParent } from "@/utils/utils";
+import { queryOptions } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { IndexableType, Table } from "dexie";
+import { fromPairs, isArray, uniq } from "lodash";
+import { generateDHIS2Periods } from "./periods";
 
-import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -170,16 +172,24 @@ const getApps = async () => {
 export const initialQueryOptions = queryOptions({
     queryKey: ["initial"],
     queryFn: async () => {
-        const { organisationUnits, dataViewOrganisationUnits } =
+        const { organisationUnits, dataViewOrganisationUnits, displayName } =
             await getDHIS2Resource<{
                 organisationUnits: DHIS2OrgUnit[];
                 dataViewOrganisationUnits: DHIS2OrgUnit[];
+                displayName: string;
             }>({
                 resource: "me.json",
                 params: {
-                    fields: "organisationUnits[id,name,leaf,parent],dataViewOrganisationUnits[id,name,leaf,parent]",
+                    fields: "displayName,organisationUnits[id,name,leaf,parent],dataViewOrganisationUnits[id,name,leaf,parent]",
                 },
             });
+
+        const { systemName } = await getDHIS2Resource<SystemInfo>({
+            resource: "system/info",
+        });
+
+        const initials = displayName.split(" ");
+        const initialsString = `${initials[0][0]}${initials[1][0]}`;
 
         // const { headers, rows } = await getDHIS2Resource<{
         //     headers: Array<Record<string, string>>;
@@ -317,6 +327,8 @@ export const initialQueryOptions = queryOptions({
             apps,
             indicatorsObject,
             programAreas,
+            systemName,
+            initialsString,
         };
     },
 });
@@ -365,7 +377,7 @@ export const appsQueryOptions = queryOptions({
     },
 });
 
-export const dashboardsQueryOptions = () => {
+export const dashboardsQueryOptions = (fetch?: boolean) => {
     return queryOptions({
         queryKey: ["dashboards"],
         queryFn: async () => {
@@ -443,10 +455,7 @@ export const dashboardsQueryOptions = () => {
                     row.map((r, index) => [headers[index].name, r]),
                 );
             });
-
-            const condition = false;
-
-            if (condition) {
+            if (fetch || fetch === undefined) {
                 const data = await getAnalyticsRowData(
                     dataViewOrganisationUnits,
                 );
@@ -466,6 +475,8 @@ export const dashboardsQueryOptions = () => {
 export const trackedEntityInstancesOptions = (
     program: string,
     search: DashboardQuery,
+    processedIndicators: Record<string, Record<string, string>>,
+    processedOptions: Record<string, string>,
 ) => {
     return queryOptions({
         queryKey: ["tracked-entity-instances", ...Object.values(search)],
@@ -515,9 +526,7 @@ export const trackedEntityInstancesOptions = (
                     filter: `TG1QzFgGTex:IN:${pas.join(";")}`,
                 };
             }
-
             let currentProgram = await db.programs.get(program);
-
             if (currentProgram === undefined) {
                 currentProgram = await getDHIS2Resource<Program>({
                     resource: `programs/${program}`,
@@ -535,95 +544,11 @@ export const trackedEntityInstancesOptions = (
                 resource: "trackedEntityInstances",
                 params,
             });
-
-            const allOrganizations = uniq(
-                trackedEntityInstances.map(({ orgUnit }) => orgUnit),
+            const processed = await convertInstances(
+                trackedEntityInstances,
+                processedIndicators,
+                processedOptions,
             );
-            const { organisationUnits } = await getDHIS2Resource<{
-                organisationUnits: Array<{
-                    id: string;
-                    name: string;
-                    parent?: {
-                        id: string;
-                        name: string;
-                        parent?: {
-                            id: string;
-                            name: string;
-                            parent?: { id: string; name: string };
-                        };
-                    };
-                }>;
-            }>({
-                resource: "organisationUnits.json",
-                params: {
-                    filter: `id:in:[${allOrganizations.join(",")}]`,
-                    fields: "id,name,parent[id,name,parent[id,name,parent[id,name,parent[id,name]]]]",
-                },
-            });
-            const facilities = fromPairs(
-                organisationUnits.map(({ id, name, parent }) => {
-                    return [
-                        id,
-                        [name, ...convertParent([], parent)]
-                            .reverse()
-                            .join("/"),
-                    ];
-                }),
-            );
-
-            const processed: Array<InstanceDisplay> =
-                trackedEntityInstances.map(
-                    ({ attributes, enrollments, ...rest }) => {
-                        const allEvents: Record<string, string> = {};
-                        orderBy(
-                            enrollments[0].events.filter(
-                                ({ programStage }) =>
-                                    programStage === "eB7oMPVRytu",
-                            ),
-                            "eventDate",
-                            "asc",
-                        ).forEach((e, index) => {
-                            const numerator = e.dataValues.find(
-                                (dv) => dv.dataElement === "rVZlkzOwWhi",
-                            );
-                            const denominator = e.dataValues.find(
-                                (dv) => dv.dataElement === "RgNQcLejbwX",
-                            );
-                            if (numerator) {
-                                allEvents[`${index}n`] = numerator.value ?? "";
-                            }
-                            if (denominator) {
-                                allEvents[`${index}d`] =
-                                    denominator.value ?? "";
-                            }
-                        });
-                        return {
-                            ...rest,
-                            attributesObject: {
-                                ...fromPairs(
-                                    attributes
-                                        .concat(
-                                            enrollments.flatMap(
-                                                ({ attributes }) =>
-                                                    attributes ?? [],
-                                            ),
-                                        )
-                                        .map(({ value, attribute }) => [
-                                            attribute,
-                                            value,
-                                        ]),
-                                ),
-                                path: facilities[rest.orgUnit],
-                                ...allEvents,
-                            },
-                            attributes,
-                            firstEnrollment:
-                                enrollments.length > 0
-                                    ? enrollments[0].enrollment
-                                    : "",
-                        };
-                    },
-                );
             return { processed, total, currentProgram };
         },
     });

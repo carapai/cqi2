@@ -190,19 +190,6 @@ export const initialQueryOptions = queryOptions({
 
         const initials = displayName.split(" ");
         const initialsString = `${initials[0][0]}${initials[1][0]}`;
-
-        // const { headers, rows } = await getDHIS2Resource<{
-        //     headers: Array<Record<string, string>>;
-        //     rows: string[][];
-        // }>({
-        //     resource: "events/query.json",
-        //     params: {
-        //         ouMode: "ALL",
-        //         programStage: "vPQxfsUQLEy",
-        //         includeAllDataElements: "true",
-        //         skipPaging: "true",
-        //     },
-        // });
         const { organisationUnitLevels } = await getDHIS2Resource<{
             organisationUnitLevels: Array<{
                 id: string;
@@ -317,6 +304,9 @@ export const initialQueryOptions = queryOptions({
             },
             {},
         );
+        await db.analytics.clear();
+        const data = await getAnalyticsRowData(dataViewOrganisationUnits);
+        await db.analytics.bulkPut(data);
         return {
             programs,
             ou: organisationUnits[0].id,

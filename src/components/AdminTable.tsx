@@ -14,7 +14,7 @@ export default function AdminTable({
     structure: AnalyticsStructure;
 }) {
     const { counting } = useSearch({ from: "/dashboards/$id" });
-    const { indicators } = useLoaderData({ from: "/dashboards" });
+    const { indicators } = useLoaderData({ from: "__root__" });
     const { level, ou, periods, pa, ind } = useSearch({
         from: "/dashboards/$id",
     });

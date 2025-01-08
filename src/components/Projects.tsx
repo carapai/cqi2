@@ -6,7 +6,7 @@ import { Loading } from "@/components/Loading";
 export default function Projects() {
     const search = useSearch({ from: "/dashboards/$id" });
 
-    const { indicators, options } = useLoaderData({ from: "/dashboards" });
+    const { indicators, options } = useLoaderData({ from: "__root__" });
     const processedIndicators = indicators.reduce<
         Record<string, Record<string, string>>
     >((acc, i) => {

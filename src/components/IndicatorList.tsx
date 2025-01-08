@@ -13,7 +13,7 @@ export default function IndicatorList({
 }: {
     structure: AnalyticsStructure;
 }) {
-    const { indicators } = useLoaderData({ from: "/dashboards" });
+    const { indicators } = useLoaderData({ from: "__root__" });
     const { level, ou, periods, pa, ind, filter } = useSearch({
         from: "/dashboards/$id",
     });

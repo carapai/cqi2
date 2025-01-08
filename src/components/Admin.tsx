@@ -12,7 +12,7 @@ export default function Admin() {
     const search = useSearch({ from: "/dashboards/$id" });
     const navigate = useNavigate({ from: "/dashboards/$id" });
 
-    const { indicators } = useLoaderData({ from: "/dashboards" });
+    const { indicators } = useLoaderData({ from: "__root__" });
 
     const [currentIndicators, setCurrentIndicators] =
         useState<Array<Dictionary<string>>>(indicators);

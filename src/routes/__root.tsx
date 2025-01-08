@@ -54,8 +54,8 @@ function RootComponent() {
                     alignItems="center"
                 >
                     <Image
-                        src="../../api/staticContent/logo_banner"
-                        height="40px"
+                        src="./dhis2whitelogo.png"
+                        height="28px"
                         preview={false}
                         alt="DHIS2 Logo"
                     />
@@ -65,7 +65,7 @@ function RootComponent() {
                 </Stack>
 
                 <Spacer />
-                <Stack direction="row" spacing={8} alignItems="center">
+                <Stack direction="row" spacing={6} alignItems="center">
                     <Image
                         src="interpretations.png"
                         width="20px"
@@ -95,7 +95,7 @@ function RootComponent() {
                 bgColor="white"
                 borderRadius="md"
                 boxShadow="sm"
-                spacing={6}
+                spacing={3}
                 h="48px"
                 maxH="48px"
                 minH="48px"

@@ -38,7 +38,7 @@ export const postDHIS2Resource = async <T>({
     includeApi = true,
 }: {
     resource: string;
-    params?: Record<string, string | number>;
+    params?: Record<string, string | number | boolean>;
     includeApi?: boolean;
     data: object;
 }) => {

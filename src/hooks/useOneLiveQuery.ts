@@ -8,10 +8,10 @@ export function useOneLiveQuery<T, R = string>(
 ) {
     const tableQuery = useLiveQuery(() => query, deps);
 
-    const result = React.useMemo(() => {
-        if (!tableQuery) return null;
-        return tableQuery;
+    return React.useMemo(() => {
+        if (tableQuery === undefined) {
+            return { loading: true, data: undefined };
+        }
+        return { loading: false, data: tableQuery };
     }, [tableQuery]);
-
-    return result;
 }

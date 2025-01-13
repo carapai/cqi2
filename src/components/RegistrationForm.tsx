@@ -1,42 +1,87 @@
 import { formElements } from "@/components/form-elements";
+import { db } from "@/db";
 import { postDHIS2Resource } from "@/dhis2";
+import { useOneLiveQuery } from "@/hooks/useOneLiveQuery";
 import {
     DisplayInstance,
-    Option,
+    OptionSet,
+    ProgramStageDataElement,
     ProgramTrackedEntityAttribute,
+    ValueType,
 } from "@/interfaces";
 import { generateUid } from "@/utils/uid";
 import { Spacer, Stack, Text } from "@chakra-ui/react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-    useLoaderData,
-    useNavigate,
-    useParams,
-    useSearch,
-} from "@tanstack/react-router";
-import { Button, Col, Row, Select } from "antd";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
+import { Button, Col, Row, Select, Modal } from "antd";
 import dayjs from "dayjs";
 import { isArray, isEmpty } from "lodash";
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
+
+const indicatorAttributes: ProgramStageDataElement[] = [
+    {
+        compulsory: false,
+        optionSetValue: false,
+        optionSet: { options: [] },
+        dataElement: {
+            id: "kToJ1rk0fwY",
+            name: "Indicator Name",
+            optionSetValue: false,
+            valueType: "TEXT",
+            optionSet: undefined,
+            formName: "Indicator Name",
+        },
+    },
+    {
+        compulsory: false,
+        optionSetValue: false,
+        optionSet: { options: [] },
+        dataElement: {
+            id: "krwzUepGwj7",
+            name: "Numerator Name",
+            optionSetValue: false,
+            valueType: "TEXT",
+            optionSet: undefined,
+            formName: "Numerator Name",
+        },
+    },
+    {
+        compulsory: false,
+        optionSetValue: false,
+        optionSet: { options: [] },
+        dataElement: {
+            id: "WI6Qp8gcZFX",
+            name: "Denominator Name",
+            optionSetValue: false,
+            valueType: "TEXT",
+            optionSet: undefined,
+            formName: "Denominator Name",
+        },
+    },
+];
 
 const FormElement = React.memo(
     ({
-        attribute,
-        displayInstance,
         placeholder = "",
         onChange,
         disabledDate,
+        optionSetValue,
+        valueType,
+        id,
+        optionSet,
+        multiple,
+        value,
     }: {
         placeholder?: string;
-        attribute: ProgramTrackedEntityAttribute["trackedEntityAttribute"];
-        displayInstance: DisplayInstance | undefined;
         onChange: (value: string, dataElement: string) => void;
         disabledDate?: (currentDate: dayjs.Dayjs) => boolean;
+        optionSetValue: boolean;
+        valueType: ValueType;
+        id: string;
+        optionSet?: OptionSet;
+        multiple?: boolean;
+        value: string;
     }) => {
-        const { optionSetValue, valueType, id, optionSet, multiple } =
-            attribute;
-        const val = (displayInstance?.attributesObject ?? {})[id];
-
         if (optionSetValue) {
             return (
                 <Select
@@ -45,7 +90,7 @@ const FormElement = React.memo(
                     allowClear
                     placeholder={placeholder}
                     mode={multiple ? "multiple" : undefined}
-                    value={multiple && val ? val.split(",") : val}
+                    value={multiple && value ? value.split(",") : value}
                     filterOption={(input, option) =>
                         (option?.label ?? "")
                             .toLowerCase()
@@ -62,7 +107,7 @@ const FormElement = React.memo(
         const Element = formElements[valueType];
         return Element ? (
             <Element
-                value={(displayInstance?.attributesObject ?? {})[id]}
+                value={value}
                 onChange={(value) => onChange(value, id)}
                 onBlur={() => {}}
                 disabledDate={disabledDate}
@@ -80,7 +125,9 @@ const RegistrationForm: React.FC<{
     const [currentInstance, setCurrentInstance] = React.useState<
         DisplayInstance | undefined
     >(displayInstance);
-    const { indicators } = useLoaderData({ from: "__root__" });
+    const [currentIndicator, setCurrentIndicator] = React.useState<
+        Record<string, string>
+    >({});
     const { entity, program } = useParams({
         from: "/data-entry/$program/tracked-entities_/$entity/form",
     });
@@ -92,6 +139,20 @@ const RegistrationForm: React.FC<{
     });
     const programArea = currentInstance?.attributesObject?.["TG1QzFgGTex"];
     const [loading, setLoading] = React.useState(false);
+    const [isModalOpen, setIsModalOpen] = React.useState(false);
+    const [pending, setPending] = React.useState(false);
+    const [currentEvent, setCurrentEvent] = useState<string>("");
+
+    const { data: indicatorData } = useOneLiveQuery(
+        db.indicators
+            .where("kuVtv8R9n8q")
+            .equals(programArea ?? "-")
+            .and(
+                (r) => r["orgUnit"] === owner || r["orgUnit"] === "akV6429SUqu",
+            )
+            .toArray(),
+        [programArea, currentEvent, owner],
+    );
 
     const isValid = () => {
         const attributes = currentInstance?.attributesObject;
@@ -192,18 +253,6 @@ const RegistrationForm: React.FC<{
         () =>
             programTrackedEntityAttributes.map((e) => {
                 if (e.trackedEntityAttribute.id === "kHRn35W3Gq4") {
-                    let options: Option[] = [];
-                    if (programArea) {
-                        options = indicators
-                            .filter(
-                                (row: Record<string, string>) =>
-                                    programArea === row["kuVtv8R9n8q"],
-                            )
-                            .map(({ kToJ1rk0fwY, event }) => ({
-                                label: kToJ1rk0fwY,
-                                value: event,
-                            }));
-                    }
                     return {
                         ...e,
                         trackedEntityAttribute: {
@@ -211,38 +260,116 @@ const RegistrationForm: React.FC<{
                             optionSetValue: true,
                             multiple: false,
                             optionSet: {
-                                options: options,
+                                options:
+                                    indicatorData
+                                        ?.map(({ event, kToJ1rk0fwY }) => ({
+                                            label: kToJ1rk0fwY,
+                                            value: event,
+                                        }))
+                                        .concat([
+                                            {
+                                                label: "New Indicator",
+                                                value: "new indicator",
+                                            },
+                                        ]) ?? [],
                             },
                         },
                     };
                 }
                 return e;
             }),
-        [programTrackedEntityAttributes, programArea, indicators],
+        [programTrackedEntityAttributes, indicatorData],
     );
+
+    const showModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleOk = async () => {
+        setPending(() => true);
+        const event = generateUid();
+        const payload: Record<string, string> = {
+            attributeOptionCombo: "HllvX50cXC0",
+            completedBy: "true",
+            completedDate: dayjs().format("YYYY-MM-DD"),
+            created: dayjs().format("YYYY-MM-DD"),
+
+            deleted: "false",
+            dueDate: dayjs().format("YYYY-MM-DD"),
+            enrollment: "eq4aWCJnhVA",
+            event,
+            eventDate: dayjs().format("YYYY-MM-DD"),
+            kuVtv8R9n8q:
+                currentInstance?.attributesObject?.["TG1QzFgGTex"] ?? "",
+            lastUpdated: dayjs().format("YYYY-MM-DD"),
+            o9OCHUG0yv2: "",
+            orgUnit: owner,
+            program: "eQf9K4L2yxE",
+            programStage: "vPQxfsUQLEy",
+            status: "ACTIVE",
+            ...currentIndicator,
+        };
+
+        const {
+            kuVtv8R9n8q,
+            o9OCHUG0yv2,
+            kToJ1rk0fwY,
+            krwzUepGwj7,
+            WI6Qp8gcZFX,
+            ...rest
+        } = payload;
+
+        const actualEvent = {
+            ...rest,
+            dataValues: [
+                { dataElement: "kuVtv8R9n8q", value: kuVtv8R9n8q },
+                { dataElement: "o9OCHUG0yv2", value: o9OCHUG0yv2 },
+                { dataElement: "kToJ1rk0fwY", value: kToJ1rk0fwY },
+                { dataElement: "krwzUepGwj7", value: krwzUepGwj7 },
+                { dataElement: "WI6Qp8gcZFX", value: WI6Qp8gcZFX },
+            ],
+        };
+        await postDHIS2Resource({
+            resource: "events",
+            data: { events: [actualEvent] },
+            params: { async: false },
+        });
+        await db.indicators.put(payload);
+        setCurrentEvent(() => event);
+        setPending(() => false);
+        setCurrentInstance((prev) => {
+            if (prev)
+                return {
+                    ...prev,
+                    attributesObject: {
+                        ...prev.attributesObject,
+                        kHRn35W3Gq4: event,
+                    },
+                };
+            return prev;
+        });
+        setCurrentIndicator(() => ({}));
+        setIsModalOpen(false);
+    };
+
+    const handleCancel = () => {
+        setIsModalOpen(false);
+    };
+
+    const onIndicatorChange = (value: string, dataElement: string) => {
+        setCurrentIndicator((prev) => ({
+            ...prev,
+            [dataElement]: value,
+        }));
+    };
+    const isDisabled = useMemo(() => {
+        return Object.values(currentIndicator).every(
+            (a) => a !== "" && a !== undefined,
+        );
+    }, [currentIndicator]);
     const onChange = useCallback(
         async (value: string, dataElement: string) => {
-            if (displayInstance) {
-                setCurrentInstance((prev) => {
-                    if (prev)
-                        return {
-                            ...prev,
-                            attributesObject: {
-                                ...prev.attributesObject,
-                                [dataElement]: value,
-                            },
-                        };
-                    return prev;
-                });
-            } else {
-                setCurrentInstance(() => ({
-                    trackedEntityInstance: entity,
-                    attributesObject: {
-                        [dataElement]: value,
-                    },
-                }));
-            }
-            if (dataElement === "TG1QzFgGTex") {
+            if (dataElement === "kHRn35W3Gq4" && value === "new indicator") {
                 setCurrentInstance((prev) => {
                     if (prev)
                         return {
@@ -254,6 +381,42 @@ const RegistrationForm: React.FC<{
                         };
                     return prev;
                 });
+                showModal();
+            } else {
+                if (displayInstance) {
+                    setCurrentInstance((prev) => {
+                        if (prev) {
+                            return {
+                                ...prev,
+                                attributesObject: {
+                                    ...prev.attributesObject,
+                                    [dataElement]: value,
+                                },
+                            };
+                        }
+                        return prev;
+                    });
+                } else {
+                    setCurrentInstance(() => ({
+                        trackedEntityInstance: entity,
+                        attributesObject: {
+                            [dataElement]: value,
+                        },
+                    }));
+                }
+                if (dataElement === "TG1QzFgGTex") {
+                    setCurrentInstance((prev) => {
+                        if (prev)
+                            return {
+                                ...prev,
+                                attributesObject: {
+                                    ...prev.attributesObject,
+                                    kHRn35W3Gq4: "",
+                                },
+                            };
+                        return prev;
+                    });
+                }
             }
         },
         [entity, displayInstance],
@@ -278,9 +441,25 @@ const RegistrationForm: React.FC<{
                                         {`${trackedEntityAttribute.displayFormName || trackedEntityAttribute.name}`}
                                     </Text>
                                     <FormElement
-                                        attribute={trackedEntityAttribute}
-                                        displayInstance={currentInstance}
+                                        id={trackedEntityAttribute.id}
+                                        value={
+                                            currentInstance?.attributesObject?.[
+                                                trackedEntityAttribute.id
+                                            ] ?? ""
+                                        }
+                                        optionSet={
+                                            trackedEntityAttribute.optionSet
+                                        }
+                                        valueType={
+                                            trackedEntityAttribute.valueType
+                                        }
                                         onChange={onChange}
+                                        multiple={
+                                            trackedEntityAttribute.multiple
+                                        }
+                                        optionSetValue={
+                                            trackedEntityAttribute.optionSetValue
+                                        }
                                         disabledDate={(currentDate) =>
                                             currentDate.isBefore(
                                                 dayjs(
@@ -305,8 +484,24 @@ const RegistrationForm: React.FC<{
                                     alignItems="center"
                                 >
                                     <FormElement
-                                        attribute={trackedEntityAttribute}
-                                        displayInstance={currentInstance}
+                                        id={trackedEntityAttribute.id}
+                                        value={
+                                            currentInstance?.attributesObject?.[
+                                                trackedEntityAttribute.id
+                                            ] ?? ""
+                                        }
+                                        optionSet={
+                                            trackedEntityAttribute.optionSet
+                                        }
+                                        valueType={
+                                            trackedEntityAttribute.valueType
+                                        }
+                                        multiple={
+                                            trackedEntityAttribute.multiple
+                                        }
+                                        optionSetValue={
+                                            trackedEntityAttribute.optionSetValue
+                                        }
                                         onChange={onChange}
                                     />
                                     <Text>
@@ -323,9 +518,19 @@ const RegistrationForm: React.FC<{
                                     {`${trackedEntityAttribute.displayFormName || trackedEntityAttribute.name}`}
                                 </Text>
                                 <FormElement
-                                    attribute={trackedEntityAttribute}
-                                    displayInstance={currentInstance}
+                                    id={trackedEntityAttribute.id}
+                                    value={
+                                        currentInstance?.attributesObject?.[
+                                            trackedEntityAttribute.id
+                                        ] ?? ""
+                                    }
+                                    optionSet={trackedEntityAttribute.optionSet}
+                                    valueType={trackedEntityAttribute.valueType}
                                     onChange={onChange}
+                                    multiple={trackedEntityAttribute.multiple}
+                                    optionSetValue={
+                                        trackedEntityAttribute.optionSetValue
+                                    }
                                 />
                             </Stack>
                         </Col>
@@ -360,6 +565,42 @@ const RegistrationForm: React.FC<{
                     Save Project
                 </Button>
             </Stack>
+            <Modal
+                title="Basic Modal"
+                open={isModalOpen}
+                onOk={handleOk}
+                onCancel={handleCancel}
+                okText={pending ? "Loading..." : "Ok"}
+                okButtonProps={{
+                    loading: pending,
+                    disabled: pending || !isDisabled,
+                }}
+                cancelButtonProps={{ disabled: pending }}
+            >
+                <Stack>
+                    {indicatorAttributes.map(({ dataElement }) => (
+                        <Stack
+                            direction="column"
+                            width="100%"
+                            id={dataElement.id}
+                        >
+                            <Text>
+                                {`${dataElement.formName || dataElement.name}`}
+                            </Text>
+                            <FormElement
+                                id={dataElement.id}
+                                value={currentIndicator[dataElement.id] ?? ""}
+                                optionSet={dataElement.optionSet}
+                                valueType={dataElement.valueType}
+                                onChange={onIndicatorChange}
+                                multiple={false}
+                                optionSetValue={dataElement.optionSetValue}
+                            />
+                        </Stack>
+                    ))}
+                    <pre>{JSON.stringify(currentIndicator, null, 2)}</pre>
+                </Stack>
+            </Modal>
         </Stack>
     );
 });

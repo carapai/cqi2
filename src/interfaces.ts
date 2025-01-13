@@ -52,7 +52,7 @@ export interface ProgramTrackedEntityAttribute {
 
 export interface TrackedEntityAttribute {
     name: string;
-    valueType: string;
+    valueType: ValueType;
     unique: boolean;
     generated: boolean;
     pattern: string;

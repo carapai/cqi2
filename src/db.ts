@@ -7,6 +7,7 @@ export class CQIDexie extends Dexie {
     programs!: Table<Partial<Program>>;
     instances!: Table<Partial<DisplayInstance>>;
     analytics!: Table<Record<string, string | string[] | number | null>>;
+    indicators!: Table<Record<string, string>>;
 
     constructor() {
         super("cqi");
@@ -16,6 +17,7 @@ export class CQIDexie extends Dexie {
             instances: "trackedEntityInstance",
             programs: "id",
             analytics: "psi,TG1QzFgGTex,kHRn35W3Gq4,*path,*periods",
+            indicators: "event,kuVtv8R9n8q,orgUnit",
         });
     }
 }

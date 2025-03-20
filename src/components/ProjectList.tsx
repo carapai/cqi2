@@ -2,7 +2,9 @@ import { InstanceDisplay, Program } from "@/interfaces";
 import { downloadProjects } from "@/utils/utils";
 import { Spacer, Stack } from "@chakra-ui/react";
 import { useLoaderData, useNavigate, useSearch } from "@tanstack/react-router";
-import { Button, Table, TableProps, Tooltip } from "antd";
+import type { TableColumnsType, TableColumnType } from "antd";
+import { Button, Table, Tooltip } from "antd";
+
 import { range } from "lodash";
 import { useMemo, useState } from "react";
 
@@ -42,7 +44,13 @@ export default function ProjectList({
         },
         {},
     );
-    const columns: TableProps<InstanceDisplay>["columns"] = useMemo(
+
+    const organisationUnitColumns: TableColumnType<InstanceDisplay> = {
+        title: "Organization",
+        key: "orgUnit",
+        render: (_, row) => row.attributesObject?.["path"],
+    };
+    const columns: TableColumnsType<InstanceDisplay> | undefined = useMemo(
         () =>
             currentProgram.programTrackedEntityAttributes?.flatMap(
                 ({ trackedEntityAttribute: { id, name }, displayInList }) => {
@@ -159,7 +167,7 @@ export default function ProjectList({
         [currentProgram.programTrackedEntityAttributes],
     );
 
-    const performanceColumns: TableProps<InstanceDisplay>["columns"] = useMemo(
+    const performanceColumns: TableColumnsType<InstanceDisplay> = useMemo(
         () =>
             range(12).map((i) => ({
                 title: `Period ${i + 1}`,
@@ -223,7 +231,11 @@ export default function ProjectList({
                 scroll={{ x: "max-content", y: 510 }}
                 bordered
                 style={{ whiteSpace: "nowrap" }}
-                columns={[...(columns ?? []), ...performanceColumns]}
+                columns={[
+                    organisationUnitColumns,
+                    ...(columns ?? []),
+                    ...performanceColumns,
+                ]}
                 dataSource={processed}
                 rowKey="trackedEntityInstance"
                 pagination={{

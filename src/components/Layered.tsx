@@ -1,3 +1,4 @@
+import { Loading } from "@/components/Loading";
 import { AnalyticsStructure } from "@/interfaces";
 import { rawDataQueryOptions } from "@/queryOptions";
 import { computerIndicator, downloadLayered } from "@/utils/utils";
@@ -7,18 +8,15 @@ import { useSearch } from "@tanstack/react-router";
 import type { TableProps } from "antd";
 import { Button, Table } from "antd";
 import { isArray } from "lodash";
-import { Loading } from "@/components/Loading";
 export default function Layered({
     structure,
 }: {
     structure: AnalyticsStructure;
 }) {
-    const { periods, level, ou, pa, ind } = useSearch({
+    const { ind } = useSearch({
         from: "/dashboards/$id",
     });
-    const { isLoading, data } = useQuery(
-        rawDataQueryOptions({ level, ou, periods, pa, ind }),
-    );
+    const { isLoading, data } = useQuery(rawDataQueryOptions());
     if (isLoading || !data) return <Loading />;
 
     const columns: TableProps<{ ou: string }>["columns"] = [

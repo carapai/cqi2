@@ -36,7 +36,6 @@ function DataEntryProgramTrackedEntitiesComponent() {
     const { program: currentProgram } = useLoaderData({
         from: "/data-entry/$program",
     });
-
     const queryClient = useQueryClient();
 
     const { indicatorsObject, programAreas } = useLoaderData({
@@ -169,136 +168,19 @@ function DataEntryProgramTrackedEntitiesComponent() {
         ],
     );
 
-    const columns: TableProps<DisplayInstance>["columns"] = useMemo(
-        () =>
-            currentProgram.programTrackedEntityAttributes.flatMap(
-                (row, index) => {
-                    const {
-                        trackedEntityAttribute: { id, name, valueType },
-                        displayInList,
-                    } = row;
-                    if (displayInList) {
-                        if (index === 0) {
-                            return {
-                                fixed: "left",
-                                ellipsis: true,
-                                title: name,
-                                key: id,
-                                render: (_, row) => {
-                                    if (
-                                        valueType === "DATE" &&
-                                        row.attributesObject?.[id]
-                                    ) {
-                                        return (
-                                            <Text>
-                                                {dayjs(
-                                                    row.attributesObject?.[id],
-                                                ).format("DD/MM/YYYY")}
-                                            </Text>
-                                        );
-                                    }
-                                    return (
-                                        <Text>
-                                            {row.attributesObject?.[id] ?? ""}
-                                        </Text>
-                                    );
-                                },
-                            };
-                        }
-
-                        if (id === "kHRn35W3Gq4") {
-                            return [
-                                {
-                                    title: name,
-                                    ellipsis: true,
-                                    key: id,
-                                    render: (_, row) => {
-                                        const { kToJ1rk0fwY } =
-                                            indicatorsObject[
-                                                row.attributesObject?.[id] ?? ""
-                                            ] ?? {};
-                                        return <Text>{kToJ1rk0fwY}</Text>;
-                                    },
-                                },
-                                {
-                                    title: "Numerator",
-                                    ellipsis: true,
-                                    key: `${id}WI6Qp8gcZFX`,
-                                    render: (_, row) => {
-                                        const { WI6Qp8gcZFX } =
-                                            indicatorsObject[
-                                                row.attributesObject?.[id] ?? ""
-                                            ] ?? {};
-                                        return <Text>{WI6Qp8gcZFX}</Text>;
-                                    },
-                                },
-                                {
-                                    title: "Denominator",
-                                    ellipsis: true,
-                                    key: `${id}krwzUepGwj7`,
-                                    render: (_, row) => {
-                                        const { krwzUepGwj7 } =
-                                            indicatorsObject[
-                                                row.attributesObject?.[id] ?? ""
-                                            ] ?? {};
-                                        return <Text>{krwzUepGwj7}</Text>;
-                                    },
-                                },
-                            ];
-                        }
-
-                        if (id === "TG1QzFgGTex") {
-                            return {
-                                title: name,
-                                ellipsis: true,
-                                key: id,
-                                render: (_, row) => (
-                                    <Text>
-                                        {
-                                            programAreas[
-                                                row.attributesObject?.[id] ?? ""
-                                            ]
-                                        }
-                                    </Text>
-                                ),
-                            };
-                        }
-
-                        if (id === "eZrfD4QnQfl") {
-                            return {
-                                title: "Completed",
-                                ellipsis: true,
-                                key: id,
-                                align: "center",
-                                fixed: "right",
-                                render: (_, row) => {
-                                    return (
-                                        <Popconfirm
-                                            title="Complete the Project"
-                                            description="Are you sure to complete this project?"
-                                            onConfirm={() =>
-                                                completeProject(true, row)
-                                            }
-                                            okText="Yes"
-                                            cancelText="No"
-                                        >
-                                            <Radio
-                                                checked={
-                                                    !isEmpty(
-                                                        row.attributesObject?.[
-                                                            id
-                                                        ],
-                                                    )
-                                                }
-                                            />
-                                        </Popconfirm>
-                                    );
-                                },
-                            };
-                        }
+    const columns: TableProps<DisplayInstance>["columns"] = useMemo(() => {
+        return currentProgram.programTrackedEntityAttributes.flatMap(
+            (row, index) => {
+                const {
+                    trackedEntityAttribute: { id, name, valueType },
+                    displayInList,
+                } = row;
+                if (displayInList) {
+                    if (index === 0) {
                         return {
-                            title: name,
+                            fixed: "left",
                             ellipsis: true,
+                            title: name,
                             key: id,
                             render: (_, row) => {
                                 if (
@@ -321,11 +203,123 @@ function DataEntryProgramTrackedEntitiesComponent() {
                             },
                         };
                     }
-                    return [];
-                },
-            ),
-        [currentProgram, indicatorsObject, programAreas, completeProject],
-    );
+
+                    if (id === "kHRn35W3Gq4") {
+                        return [
+                            {
+                                title: name,
+                                ellipsis: true,
+                                key: id,
+                                render: (_, row) => {
+                                    const { kToJ1rk0fwY } =
+                                        indicatorsObject[
+                                            row.attributesObject?.[id] ?? ""
+                                        ] ?? {};
+                                    return <Text>{kToJ1rk0fwY}</Text>;
+                                },
+                            },
+                            {
+                                title: "Numerator",
+                                ellipsis: true,
+                                key: `${id}WI6Qp8gcZFX`,
+                                render: (_, row) => {
+                                    const { WI6Qp8gcZFX } =
+                                        indicatorsObject[
+                                            row.attributesObject?.[id] ?? ""
+                                        ] ?? {};
+                                    return <Text>{WI6Qp8gcZFX}</Text>;
+                                },
+                            },
+                            {
+                                title: "Denominator",
+                                ellipsis: true,
+                                key: `${id}krwzUepGwj7`,
+                                render: (_, row) => {
+                                    const { krwzUepGwj7 } =
+                                        indicatorsObject[
+                                            row.attributesObject?.[id] ?? ""
+                                        ] ?? {};
+                                    return <Text>{krwzUepGwj7}</Text>;
+                                },
+                            },
+                        ];
+                    }
+
+                    if (id === "TG1QzFgGTex") {
+                        return {
+                            title: name,
+                            ellipsis: true,
+                            key: id,
+                            render: (_, row) => (
+                                <Text>
+                                    {
+                                        programAreas[
+                                            row.attributesObject?.[id] ?? ""
+                                        ]
+                                    }
+                                </Text>
+                            ),
+                        };
+                    }
+
+                    if (id === "eZrfD4QnQfl") {
+                        return {
+                            title: "Completed",
+                            ellipsis: true,
+                            key: id,
+                            align: "center",
+                            fixed: "right",
+                            render: (_, row) => {
+                                return (
+                                    <Popconfirm
+                                        title="Complete the Project"
+                                        description="Are you sure to complete this project?"
+                                        onConfirm={() =>
+                                            completeProject(true, row)
+                                        }
+                                        okText="Yes"
+                                        cancelText="No"
+                                    >
+                                        <Radio
+                                            checked={
+                                                !isEmpty(
+                                                    row.attributesObject?.[id],
+                                                )
+                                            }
+                                        />
+                                    </Popconfirm>
+                                );
+                            },
+                        };
+                    }
+                    return {
+                        title: name,
+                        ellipsis: true,
+                        key: id,
+                        render: (_, row) => {
+                            console.log(row);
+                            if (
+                                valueType === "DATE" &&
+                                row.attributesObject?.[id]
+                            ) {
+                                return (
+                                    <Text>
+                                        {dayjs(
+                                            row.attributesObject?.[id],
+                                        ).format("DD/MM/YYYY")}
+                                    </Text>
+                                );
+                            }
+                            return (
+                                <Text>{row.attributesObject?.[id] ?? ""}</Text>
+                            );
+                        },
+                    };
+                }
+                return [];
+            },
+        );
+    }, [currentProgram, indicatorsObject, programAreas, completeProject]);
 
     const handleTableChange = useCallback(
         (page: number, pageSize: number) => {
@@ -350,137 +344,127 @@ function DataEntryProgramTrackedEntitiesComponent() {
     );
 
     if (isError) return <div>{JSON.stringify(error)}</div>;
-    if (registration) {
-        return (
-            <Stack
-                borderRadius="md"
-                boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
-                p="10px"
-            >
-                <Stack direction="row">
-                    <Spacer />
-                    <Button
-                        onClick={() =>
-                            navigate({
-                                to: "/data-entry/$program/tracked-entities/$entity/form",
-                                params: { entity: generateUid(), program },
-                                search: () => ({
-                                    ou,
-                                    registration,
-                                    disabled: true,
-                                    editing: false,
-                                    type,
-                                    owner: ou,
-                                }),
-                            })
-                        }
-                    >
-                        Add
-                    </Button>
-                </Stack>
-                <Table
-                    loading={isLoading}
-                    scroll={{ x: "max-content" }}
-                    bordered
-                    style={{ whiteSpace: "nowrap" }}
-                    columns={[
-                        {
-                            title: "Organisation",
-                            key: "path",
-                            dataIndex: "path",
-                            // fixed: "left",
-                        },
-                        ...columns,
 
-                        {
-                            title: "Actions",
-                            fixed: "right",
-                            key: "action",
-                            render: (_, row) => {
-                                return (
-                                    <Stack
-                                        direction="row"
-                                        alignItems={"center"}
-                                    >
-                                        <Button
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                navigate({
-                                                    to: "/data-entry/$program/tracked-entities/$entity",
-                                                    params: {
-                                                        entity: String(
-                                                            row.trackedEntityInstance,
-                                                        ),
-                                                        program,
-                                                    },
-                                                    search: () => ({
-                                                        ou,
-                                                        registration,
-                                                        disabled: true,
-                                                        editing: true,
-                                                        type,
-                                                    }),
-                                                });
-                                            }}
-                                            type="primary"
-                                        >
-                                            Details
-                                        </Button>
-                                        <Button
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                navigate({
-                                                    to: "/data-entry/$program/tracked-entities/$entity/form",
-                                                    params: {
-                                                        entity: String(
-                                                            row.trackedEntityInstance,
-                                                        ),
-                                                        program,
-                                                    },
-                                                    search: () => ({
-                                                        ou,
-                                                        registration,
-                                                        disabled: true,
-                                                        editing: true,
-                                                        type,
-                                                        owner:
-                                                            row.orgUnit ?? "",
-                                                    }),
-                                                });
-                                            }}
-                                        >
-                                            Edit
-                                        </Button>
-
-                                        <Popconfirm
-                                            title="Delete the Project"
-                                            description="Are you sure to delete this project?"
-                                            onConfirm={() => deleteProject(row)}
-                                            okText="Yes"
-                                            cancelText="No"
-                                        >
-                                            <Button danger>Delete</Button>
-                                        </Popconfirm>
-                                    </Stack>
-                                );
-                            },
-                        },
-                    ]}
-                    dataSource={data?.trackedEntities}
-                    rowKey="trackedEntityInstance"
-                    pagination={{
-                        pageSize: currentPageSize,
-                        total: data?.total,
-                        current: currentPage,
-                        onChange: handleTableChange,
-                    }}
-                    rowClassName={() => {
-						// return index % 2 === 1 ? "bg-gray-100" : "bg-gray-200";
-						return ""
-					}}
-                />
+    return (
+        <Stack
+            borderRadius="md"
+            boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
+            p="10px"
+        >
+            <Stack direction="row">
+                <Spacer />
+                <Button
+                    onClick={() =>
+                        navigate({
+                            to: "/data-entry/$program/tracked-entities/$entity/form",
+                            params: { entity: generateUid(), program },
+                            search: () => ({
+                                ou,
+                                registration,
+                                disabled: true,
+                                editing: false,
+                                type,
+                                owner: ou,
+                            }),
+                        })
+                    }
+                >
+                    Add
+                </Button>
             </Stack>
-        );
-    }
-    return <div>{JSON.stringify(data)}</div>;
+            <Table
+                loading={isLoading}
+                scroll={{ x: "max-content" }}
+                bordered
+                style={{ whiteSpace: "nowrap" }}
+                columns={[
+                    {
+                        title: "Organisation",
+                        key: "path",
+                        dataIndex: "path",
+                        // fixed: "left",
+                    },
+                    ...columns,
+
+                    {
+                        title: "Actions",
+                        fixed: "right",
+                        key: "action",
+                        render: (_, row) => {
+                            return (
+                                <Stack direction="row" alignItems={"center"}>
+                                    <Button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            navigate({
+                                                to: "/data-entry/$program/tracked-entities/$entity",
+                                                params: {
+                                                    entity: String(
+                                                        row.trackedEntityInstance,
+                                                    ),
+                                                    program,
+                                                },
+                                                search: () => ({
+                                                    ou,
+                                                    registration,
+                                                    disabled: true,
+                                                    editing: true,
+                                                    type,
+                                                }),
+                                            });
+                                        }}
+                                        type="primary"
+                                    >
+                                        Details
+                                    </Button>
+                                    <Button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            navigate({
+                                                to: "/data-entry/$program/tracked-entities/$entity/form",
+                                                params: {
+                                                    entity: String(
+                                                        row.trackedEntityInstance,
+                                                    ),
+                                                    program,
+                                                },
+                                                search: () => ({
+                                                    ou,
+                                                    registration,
+                                                    disabled: true,
+                                                    editing: true,
+                                                    type,
+                                                    owner: row.orgUnit ?? "",
+                                                }),
+                                            });
+                                        }}
+                                    >
+                                        Edit
+                                    </Button>
+
+                                    <Popconfirm
+                                        title="Delete the Project"
+                                        description="Are you sure to delete this project?"
+                                        onConfirm={() => deleteProject(row)}
+                                        okText="Yes"
+                                        cancelText="No"
+                                    >
+                                        <Button danger>Delete</Button>
+                                    </Popconfirm>
+                                </Stack>
+                            );
+                        },
+                    },
+                ]}
+                dataSource={data?.trackedEntities}
+                rowKey="trackedEntityInstance"
+                pagination={{
+                    pageSize: currentPageSize,
+                    total: data?.total,
+                    current: currentPage,
+                    onChange: handleTableChange,
+                }}
+            />
+        </Stack>
+    );
 }

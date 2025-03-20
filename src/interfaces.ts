@@ -64,9 +64,24 @@ export interface TrackedEntityAttribute {
     multiple?: boolean;
 }
 
+export interface ProgramStageSection {
+    lastUpdated: string;
+    id: string;
+    created: string;
+    name: string;
+    displayName: string;
+    externalAccess: boolean;
+    displayFormName: string;
+    sortOrder: number;
+    favorite: boolean;
+    dataElements: DataElement[];
+    description: string;
+}
+
 export interface ProgramStage {
     name: string;
     programStageDataElements: ProgramStageDataElement[];
+    programStageSections: ProgramStageSection[];
     sortOrder: number;
     id: string;
     repeatable: boolean;
@@ -249,6 +264,11 @@ export interface TrackedEntityInstances {
     trackedEntityInstances: TrackedEntityInstance[];
 }
 
+export interface Events {
+    pager: Pager;
+    events: Event[];
+}
+
 export interface TrackedEntityInstance {
     created: string;
     orgUnit: string;
@@ -396,13 +416,6 @@ interface Header {
     type: string;
 }
 
-interface Pager {
-    page: number;
-    pageCount: number;
-    total: number;
-    pageSize: number;
-}
-
 export interface AnalyticData {
     uidlevel1: string;
     uidlevel2: string;
@@ -488,6 +501,7 @@ export type DisplayInstance = Partial<
     TrackedEntityInstance & {
         attributesObject: { [key: string]: string };
         firstEnrollment: string;
+        workingDate: string;
         program: string;
     }
 >;

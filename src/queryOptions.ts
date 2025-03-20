@@ -5,11 +5,14 @@ import {
     DashboardQuery,
     DevApp,
     DisplayInstance,
+    Event,
+    Events,
     OrgUnit,
     OU,
     Period,
     ProdApp,
     Program,
+    ProgramTrackedEntityAttribute,
     SystemInfo,
     TrackedEntityInstance,
     TrackedEntityInstances,
@@ -33,6 +36,27 @@ type DHIS2OrgUnit = {
     name: string;
     leaf: boolean;
     parent: { id: string };
+};
+
+export const getOrganisationUnits = async (allOrganizations: string[]) => {
+    const { organisationUnits } = await getDHIS2Resource<{
+        organisationUnits: Array<OU>;
+    }>({
+        resource: "organisationUnits.json",
+        params: {
+            filter: `id:in:[${allOrganizations.join(",")}]`,
+            fields: "id,name,parent[id,name,parent[id,name,parent[id,name,parent[id,name]]]]",
+        },
+    });
+
+    return fromPairs(
+        organisationUnits.map(({ id, name, parent }) => {
+            return [
+                id,
+                [name, ...convertParent([], parent)].reverse().join("/"),
+            ];
+        }),
+    );
 };
 
 const getAnalyticsRowData = async (
@@ -657,13 +681,51 @@ export const programQueryOptions = (program: string) =>
     queryOptions({
         queryKey: ["programs", program],
         queryFn: async () => {
-            const currentProgram = await getDHIS2Resource<Program>({
+            let currentProgram = await getDHIS2Resource<Program>({
                 resource: `programs/${program}.json`,
                 params: {
-                    fields: "id,name,registration,programType,selectIncidentDatesInFuture,selectEnrollmentDatesInFuture,incidentDateLabel,enrollmentDateLabel,trackedEntityType[id],organisationUnits[id,name],programTrackedEntityAttributes[id,name,mandatory,valueType,displayInList,sortOrder,allowFutureDate,trackedEntityAttribute[id,name,generated,pattern,unique,valueType,orgunitScope,optionSetValue,displayFormName,optionSet[options[code~rename(value),name~rename(label)]]]],programStages[id,name,repeatable,sortOrder,programStageDataElements[compulsory,dataElement[id,name,formName,optionSetValue,valueType,optionSet[options[code~rename(value),name~rename(label)]]]]]",
+                    fields: "id,name,registration,programType,selectIncidentDatesInFuture,selectEnrollmentDatesInFuture,incidentDateLabel,enrollmentDateLabel,trackedEntityType[id],organisationUnits[id,name],programTrackedEntityAttributes[id,name,mandatory,valueType,displayInList,sortOrder,allowFutureDate,trackedEntityAttribute[id,name,generated,pattern,unique,valueType,orgunitScope,optionSetValue,displayFormName,optionSet[options[code~rename(value),name~rename(label)]]]],programStages[id,name,repeatable,sortOrder,programStageSections[id,description,name,displayName,displayFormName,sortOrder,dataElements[id,name,formName,optionSetValue,valueType,optionSet[options[code~rename(value),name~rename(label)]]]],programStageDataElements[compulsory,dataElement[id,name,formName,optionSetValue,valueType,optionSet[options[code~rename(value),name~rename(label)]]]]]",
                     paging: "false",
                 },
             });
+            if (
+                !currentProgram.registration &&
+                currentProgram.programStages &&
+                currentProgram.programStages.length === 1
+            ) {
+                const programTrackedEntityAttributes: ProgramTrackedEntityAttribute[] =
+                    currentProgram.programStages[0].programStageDataElements.map(
+                        ({ dataElement }) => {
+                            return {
+                                name: dataElement.name,
+                                displayInList: true,
+                                sortOrder: -1,
+                                id: generateUid(),
+                                allowFutureDate: false,
+                                mandatory: true,
+                                valueType: dataElement.valueType,
+                                trackedEntityAttribute: {
+                                    id: dataElement.id,
+                                    name: dataElement.name,
+                                    displayFormName:
+                                        dataElement.formName ??
+                                        dataElement.name,
+                                    valueType: dataElement.valueType,
+                                    optionSetValue: dataElement.optionSetValue,
+                                    optionSet: dataElement.optionSet,
+                                    generated: false,
+                                    pattern: "",
+                                    unique: false,
+                                    orgunitScope: false,
+                                },
+                            };
+                        },
+                    );
+                currentProgram = {
+                    ...currentProgram,
+                    programTrackedEntityAttributes,
+                };
+            }
 
             return { program: currentProgram };
         },
@@ -787,7 +849,60 @@ export const trackedEntitiesQueryOptions = ({
 
                 results = { ...results, trackedEntities, total };
             } else {
-                console.log("not registration");
+                let params: Record<string, string | number> = {
+                    program,
+                    totalPages: "true",
+                    page,
+                    pageSize,
+                    order: "updatedAt:desc",
+                    ouMode,
+                };
+
+                if (ou && isArray(ou) && ou.length > 0) {
+                    params = {
+                        ...params,
+                        orgUnit: ou[0],
+                    };
+                } else if (ou && !isArray(ou)) {
+                    params = {
+                        ...params,
+                        orgUnit: ou,
+                    };
+                } else {
+                    params = {
+                        ...params,
+                        ouMode: "ALL",
+                    };
+                }
+
+                const {
+                    events,
+                    pager: { total },
+                } = await getDHIS2Resource<Events>({
+                    resource: "events",
+                    params,
+                });
+
+                const trackedEntities: DisplayInstance[] = events.map((e) => {
+                    return {
+                        trackedEntityInstance: e.event,
+                        orgUnit: e.orgUnit,
+                        attributesObject: fromPairs(
+                            e.dataValues.map(({ value, dataElement }) => [
+                                dataElement,
+                                value,
+                            ]),
+                        ),
+                        attributes: e.dataValues.map(
+                            ({ value = "", dataElement = "" }) => ({
+                                attribute: dataElement,
+                                value,
+                            }),
+                        ),
+                        firstEnrollment: e.enrollment,
+                    };
+                });
+                results = { ...results, trackedEntities, total };
             }
             return results;
         },
@@ -797,10 +912,12 @@ export const trackedEntityQueryOptions = ({
     entity,
     program,
     editing,
+    registration,
 }: {
     entity: string;
     program: string;
     editing: boolean;
+    registration: boolean;
 }) =>
     queryOptions({
         queryKey: ["entity", entity, editing, program],
@@ -810,7 +927,7 @@ export const trackedEntityQueryOptions = ({
                 attributesObject: {},
                 firstEnrollment: generateUid(),
             };
-            if (editing) {
+            if (editing && registration) {
                 const instance = await getDHIS2Resource<TrackedEntityInstance>({
                     resource: `trackedEntityInstances/${entity}.json`,
                     params: { fields: "*", program },
@@ -831,7 +948,52 @@ export const trackedEntityQueryOptions = ({
                             ? instance.enrollments[0].enrollment
                             : "",
                 };
-
+                await db.instances.put(displayInstance);
+            } else if (editing) {
+                const instance = await getDHIS2Resource<Event>({
+                    resource: `events/${entity}.json`,
+                    params: { fields: "*", program },
+                });
+                displayInstance = {
+                    attributesObject: fromPairs(
+                        instance.dataValues.map(({ value, dataElement }) => [
+                            dataElement,
+                            value,
+                        ]),
+                    ),
+                    firstEnrollment: instance.enrollment,
+                    trackedEntityInstance: instance.event,
+                    orgUnit: instance.orgUnit,
+                    program: instance.enrollment,
+                    workingDate: instance.eventDate,
+                    attributes: instance.dataValues.map(
+                        ({ dataElement = "", value = "" }) => ({
+                            attribute: dataElement,
+                            value,
+                        }),
+                    ),
+                    enrollments: [
+                        {
+                            trackedEntityInstance: instance.event,
+                            enrollment: instance.enrollment,
+                            events: [instance],
+                            storedBy: instance.storedBy,
+                            attributes: [],
+                            created: instance.created,
+                            createdAtClient: "",
+                            program: instance.program,
+                            deleted: instance.deleted,
+                            enrollmentDate: instance.eventDate,
+                            incidentDate: instance.dueDate,
+                            lastUpdated: instance.lastUpdated,
+                            orgUnit: instance.orgUnit,
+                            status: "",
+                            trackedEntityType: "",
+                            lastUpdatedAtClient: "",
+                            orgUnitName: "",
+                        },
+                    ],
+                };
                 await db.instances.put(displayInstance);
             }
             return displayInstance;

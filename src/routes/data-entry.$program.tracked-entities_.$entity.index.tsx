@@ -22,19 +22,21 @@ export const Route = createFileRoute(
     component: DataEntryProgramTrackedEntitiesEntityComponent,
     validateSearch: InstanceValidator,
 
-    loaderDeps: ({ search: { editing } }) => ({
+    loaderDeps: ({ search: { editing, registration } }) => ({
         editing,
+        registration,
     }),
     loader: ({
         params: { entity, program },
         context: { queryClient },
-        deps: { editing },
+        deps: { editing, registration },
     }) =>
         queryClient.ensureQueryData(
             trackedEntityQueryOptions({
                 entity,
                 program,
                 editing,
+                registration,
             }),
         ),
 
@@ -45,7 +47,7 @@ function DataEntryProgramTrackedEntitiesEntityComponent() {
     const { entity, program: currentProgram } = useParams({
         from: "/data-entry/$program/tracked-entities_/$entity/",
     });
-    const { editing, stage } = useSearch({
+    const { editing, stage, registration } = useSearch({
         from: "/data-entry/$program/tracked-entities_/$entity/",
     });
     const { program } = useLoaderData({
@@ -65,6 +67,7 @@ function DataEntryProgramTrackedEntitiesEntityComponent() {
             entity,
             program: currentProgram,
             editing,
+            registration,
         }),
     );
 
@@ -82,7 +85,9 @@ function DataEntryProgramTrackedEntitiesEntityComponent() {
                 },
             );
             const label =
-                stage === "g1Y2VEFKWOT" ? "Add Changes Worksheet" : "Add Summary of Observations";
+                stage === "UTZ2gDIXFP1"
+                    ? "Add Summary of Observations"
+                    : "Add Changes Worksheet";
             let children = (
                 <EventTable
                     events={events}

@@ -29,6 +29,8 @@ export default function Projects() {
             processedOptions,
         ),
     );
+
+    console.log(data);
     if (isError) return <pre>{JSON.stringify(error)}</pre>;
 
     if (isLoading) return <Loading />;

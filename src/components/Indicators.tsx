@@ -62,8 +62,8 @@ export default function Indicators() {
                     }
                 >
                     {search.filter === "ou"
-                        ? "Filter By Period"
-                        : "Filter By OU"}
+                        ? "View by Organization "
+                        : "View by Period"}
                 </Button>
                 <Button
                     type="primary"

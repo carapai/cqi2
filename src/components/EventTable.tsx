@@ -91,7 +91,7 @@ export default function EventTable({
                                         style={{ width: "100%" }}
                                         showSearch
                                         allowClear
-                                        placeholder="Select a person"
+                                        placeholder="Select option"
                                         value={value?.value}
                                         filterOption={(input, option) =>
                                             (option?.label ?? "")
@@ -113,7 +113,12 @@ export default function EventTable({
                                         onChange(currentEvent, id, value)
                                     }
                                     value={value?.value}
-									disabledDate={id === "kHRn35W3Gq4" ? (currentDate) => dayjs().isBefore(currentDate) : undefined}
+                                    disabledDate={
+                                        id === "kHRn35W3Gq4"
+                                            ? (currentDate) =>
+                                                  dayjs().isBefore(currentDate)
+                                            : undefined
+                                    }
                                 />
                             );
                         }
@@ -124,7 +129,7 @@ export default function EventTable({
                             if (value && value.value) {
                                 return dayjs(value.value).format("YYYY-MM-DD");
                             }
-							return ""
+                            return "";
                         }
                         return value?.value;
                     },

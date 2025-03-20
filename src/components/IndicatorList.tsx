@@ -14,7 +14,7 @@ export default function IndicatorList({
     structure: AnalyticsStructure;
 }) {
     const { indicators } = useLoaderData({ from: "__root__" });
-    const { level, ou, periods, pa, ind, filter } = useSearch({
+    const { pa, ind, filter } = useSearch({
         from: "/dashboards/$id",
     });
 
@@ -32,9 +32,7 @@ export default function IndicatorList({
         });
     }, [ind, pa, indicators]);
 
-    const { isLoading, data } = useQuery(
-        rawDataQueryOptions({ level, ou, periods, pa, ind }),
-    );
+    const { isLoading, data } = useQuery(rawDataQueryOptions());
     if (isLoading || !data) return <p>Loading...</p>;
     const columns: TableProps<Record<string, string>>["columns"] = [
         {

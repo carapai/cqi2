@@ -44,7 +44,9 @@ export default function SMAndESheet({
     const [currentInstance, setCurrentInstance] = useState<
         DisplayInstance | undefined
     >(displayInstance);
-    const navigate = useNavigate();
+    const navigate = useNavigate({
+        from: "/data-entry/$program/tracked-entities/$entity/form",
+    });
     const [loading, setLoading] = useState<boolean>(false);
 
     const { owner } = useSearch({
@@ -191,14 +193,13 @@ export default function SMAndESheet({
                         return total;
                     });
                     if (denominator > 1) {
-                        acc[field] = Intl.NumberFormat("en-US", {
-                            notation: "standard",
-                            style: "percent",
-                        }).format(sum(values) / denominator);
+                        acc[field] = String(
+                            Math.round((100 * sum(values)) / denominator),
+                        );
                     } else {
-                        acc[field] = Intl.NumberFormat("en-US", {
-                            notation: "standard",
-                        }).format(sum(values) / denominator);
+                        acc[field] = String(
+                            Math.round(sum(values) / denominator),
+                        );
                     }
                     return acc;
                 },
@@ -234,7 +235,7 @@ export default function SMAndESheet({
                 title: "#",
                 dataIndex: "sortOrder",
                 key: "sortOrder",
-                w: "50px",
+                width: "30px",
                 render: (text: number, record) => {
                     return {
                         children: text + 1,
@@ -248,6 +249,7 @@ export default function SMAndESheet({
                 title: "Section",
                 dataIndex: "programStageName",
                 key: "programStageName",
+                width: "100px",
                 render: (text: string, record) => {
                     return {
                         children: text,
@@ -282,7 +284,6 @@ export default function SMAndESheet({
                 title: "Value",
                 dataIndex: "value",
                 key: "value",
-                width: "30vw",
                 render: (_: string, record) => {
                     if (record.isDescription) {
                         return {
@@ -404,6 +405,24 @@ export default function SMAndESheet({
                 />
             </Box>
             <Stack direction="row">
+                <Button
+                    onClick={() =>
+                        navigate({
+                            search: (s) => ({
+                                ou: String(s.ou),
+                                page: 1,
+                                pageSize: 10,
+                                disabled: false,
+                                type: s.type,
+                                registration: s.registration,
+                            }),
+                            to: "/data-entry/$program/tracked-entities",
+                            params: { program },
+                        })
+                    }
+                >
+                    Cancel
+                </Button>
                 <Spacer />
                 <Button
                     disabled={
@@ -414,7 +433,6 @@ export default function SMAndESheet({
                     Save 5S Monitoring Tool
                 </Button>
             </Stack>
-            <pre>{JSON.stringify(currentInstance, null, 2)}</pre>
         </Stack>
     );
 }

@@ -1,3 +1,4 @@
+import { FormElement } from "@/components/FormElement";
 import { db } from "@/db";
 import { postDHIS2Resource } from "@/dhis2";
 import { useOneLiveQuery } from "@/hooks/useOneLiveQuery";
@@ -14,7 +15,6 @@ import { Button, Col, Modal, Row } from "antd";
 import dayjs from "dayjs";
 import { isEmpty } from "lodash";
 import React, { useCallback, useMemo, useState } from "react";
-import { FormElement } from "@/components/FormElement";
 
 const indicatorAttributes: ProgramStageDataElement[] = [
     {
@@ -79,6 +79,7 @@ const RegistrationForm: React.FC<{
     const navigate = useNavigate({
         from: "/data-entry/$program/tracked-entities/$entity/form",
     });
+
     const programArea = currentInstance?.attributesObject?.["TG1QzFgGTex"];
     const [loading, setLoading] = React.useState(false);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -99,12 +100,12 @@ const RegistrationForm: React.FC<{
     const isValid = () => {
         const attributes = currentInstance?.attributesObject;
         if (isEmpty(attributes)) return false;
-        return [
-            "y3hJLGjctPk",
-            "TG1QzFgGTex",
-            "kHRn35W3Gq4",
-            "WQcY6nfPouv",
-        ].every((key) => !!attributes[key]);
+        return programTrackedEntityAttributes
+            .flatMap(({ trackedEntityAttribute: { id }, mandatory }) => {
+                if (mandatory) return id;
+                return [];
+            })
+            .every((key) => !!attributes[key]);
     };
 
     const saveProject = async () => {
@@ -487,7 +488,7 @@ const RegistrationForm: React.FC<{
                                 ou: String(s.ou),
                                 page: 1,
                                 pageSize: 10,
-                                disabled: true,
+                                disabled: false,
                                 type: s.type,
                                 registration: s.registration,
                             }),
@@ -504,7 +505,7 @@ const RegistrationForm: React.FC<{
                     onClick={() => saveProject()}
                     loading={loading}
                 >
-                    Save Project
+                    Save
                 </Button>
             </Stack>
             <Modal
@@ -525,6 +526,7 @@ const RegistrationForm: React.FC<{
                             direction="column"
                             width="100%"
                             id={dataElement.id}
+                            key={dataElement.id}
                         >
                             <Text>
                                 {`${dataElement.formName || dataElement.name}`}
@@ -540,7 +542,6 @@ const RegistrationForm: React.FC<{
                             />
                         </Stack>
                     ))}
-                    <pre>{JSON.stringify(currentIndicator, null, 2)}</pre>
                 </Stack>
             </Modal>
         </Stack>

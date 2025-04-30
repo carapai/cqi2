@@ -114,5 +114,9 @@ function DataEntryProgramTrackedEntitiesEntityComponent() {
         },
     );
 
-    return <Tabs defaultActiveKey={stage} items={items} onChange={onChange} />;
+    return (
+        <Stack p="5px">
+            <Tabs items={items} onChange={onChange} activeKey={stage} />
+        </Stack>
+    );
 }

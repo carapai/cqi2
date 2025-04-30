@@ -4,7 +4,12 @@ import type { TableProps } from "antd";
 import { Spacer, Stack } from "@chakra-ui/react";
 import { useState } from "react";
 import { generateUid } from "@/utils/uid";
-import { useLoaderData, useParams, useSearch } from "@tanstack/react-router";
+import {
+    useLoaderData,
+    useNavigate,
+    useParams,
+    useSearch,
+} from "@tanstack/react-router";
 import { formElements } from "./form-elements";
 import dayjs from "dayjs";
 import { deleteDHIS2Resource, postDHIS2Resource } from "@/dhis2";
@@ -30,6 +35,10 @@ export default function EventTable({
     });
     const { program, entity } = useParams({
         from: "/data-entry/$program/tracked-entities_/$entity/",
+    });
+
+    const navigate = useNavigate({
+        from: "/data-entry/$program/tracked-entities/$entity",
     });
     const [availableEvents, setAvailableEvents] = useState<
         Array<Partial<Event>>
@@ -193,12 +202,10 @@ export default function EventTable({
         setCurrentEvent(() => event);
         setIsDeleting(() => true);
         try {
-            if (isSaved) {
-                await deleteDHIS2Resource({
-                    resource: "events",
-                    id: event,
-                });
-            }
+            await deleteDHIS2Resource({
+                resource: "events",
+                id: event,
+            });
             setAvailableEvents((prev) => prev.filter((e) => e.event !== event));
         } catch (error) {
             console.log(error);
@@ -294,6 +301,24 @@ export default function EventTable({
             rowKey="event"
             footer={() => (
                 <Stack direction="row" alignItems="center">
+                    <Button
+                        onClick={() =>
+                            navigate({
+                                search: (s) => ({
+                                    ou: String(s.ou),
+                                    page: 1,
+                                    pageSize: 10,
+                                    disabled: false,
+                                    type: s.type,
+                                    registration: s.registration,
+                                }),
+                                to: "/data-entry/$program/tracked-entities",
+                                params: { program },
+                            })
+                        }
+                    >
+                        Cancel
+                    </Button>
                     <Spacer />
                     <Button onClick={() => add()}>{label}</Button>
                 </Stack>

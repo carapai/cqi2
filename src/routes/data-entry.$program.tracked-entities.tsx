@@ -297,7 +297,6 @@ function DataEntryProgramTrackedEntitiesComponent() {
                         ellipsis: true,
                         key: id,
                         render: (_, row) => {
-                            console.log(row);
                             if (
                                 valueType === "DATE" &&
                                 row.attributesObject?.[id]
@@ -410,6 +409,8 @@ function DataEntryProgramTrackedEntitiesComponent() {
                                                     disabled: true,
                                                     editing: true,
                                                     type,
+                                                    stage: currentProgram
+                                                        .programStages[0].id,
                                                 }),
                                             });
                                         }}
